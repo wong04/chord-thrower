@@ -7,6 +7,7 @@ import { useChordPlayer } from "@/lib/audio/useChordPlayer";
 import { useDrill } from "@/lib/drill/useDrill";
 import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
+import { Tonality } from "@/lib/theory/keyHarmony";
 import { Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
 import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
@@ -35,6 +36,7 @@ export default function Home() {
 	// Drill settings
 	const [level, setLevel] = usePersistentState<Level>("level", 1);
 	const [keyChoice, setKeyChoice] = usePersistentState<string | "all">("keyChoice", "all");
+	const [tonality, setTonality] = usePersistentState<Tonality>("tonality", "major");
 	const [barsPerChord, setBarsPerChord] = usePersistentState("barsPerChord", 2);
 	const [nextPreview, setNextPreview] = usePersistentState<NextPreview>("nextPreview", "auto");
 
@@ -51,6 +53,7 @@ export default function Home() {
 	const drill = useDrill({
 		level,
 		keyChoice,
+		tonality,
 		instrument,
 		barsPerChord,
 		onChordChange: (chord, time) =>
@@ -211,6 +214,8 @@ export default function Home() {
 						onLevelChange={setLevel}
 						keyChoice={keyChoice}
 						onKeyChange={setKeyChoice}
+						tonality={tonality}
+						onTonalityChange={setTonality}
 						barsPerChord={barsPerChord}
 						onBarsChange={setBarsPerChord}
 						instrument={instrument}

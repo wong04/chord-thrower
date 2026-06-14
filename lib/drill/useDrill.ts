@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import { Tick } from "@/lib/audio/metronome";
 import { Chord, Level, randomChord } from "@/lib/theory/chordPool";
+import { Tonality } from "@/lib/theory/keyHarmony";
 import { Instrument } from "@/lib/theory/transpose";
 
 export type DrillSettings = {
 	level: Level;
 	keyChoice: string | "all";
+	tonality: Tonality;
 	instrument: Instrument;
 	/** How many bars each chord is held for. */
 	barsPerChord: number;
@@ -27,10 +29,15 @@ export type DrillState = {
 
 function differentChord(settings: DrillSettings, avoid: Chord | null): Chord {
 	for (let attempt = 0; attempt < 8; attempt++) {
-		const chord = randomChord(settings.level, settings.keyChoice, settings.instrument);
+		const chord = randomChord(
+			settings.level,
+			settings.keyChoice,
+			settings.tonality,
+			settings.instrument,
+		);
 		if (!avoid || chord.symbol !== avoid.symbol) return chord;
 	}
-	return randomChord(settings.level, settings.keyChoice, settings.instrument);
+	return randomChord(settings.level, settings.keyChoice, settings.tonality, settings.instrument);
 }
 
 /** Drives the random-chord drill: advances to a new chord every `barsPerChord` bars. */

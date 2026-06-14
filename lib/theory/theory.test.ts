@@ -73,30 +73,64 @@ describe("difficulty tiers", () => {
 	});
 
 	for (const level of [1, 2, 3, 4] as Level[]) {
-		it(`level ${level} only ever produces qualities from its pool`, () => {
+		it(`level ${level} (all keys) only ever produces qualities from its pool`, () => {
 			const pool = new Set(qualityPool(level));
 			for (let n = 0; n < 200; n++) {
-				const chord = randomChord(level, "all");
+				const chord = randomChord(level, "all", "major");
 				expect(pool.has(chord.quality)).toBe(true);
 			}
 		});
 	}
 
-	it("respects a locked key", () => {
-		for (let n = 0; n < 50; n++) {
-			expect(randomChord(1, "Eb").root).toBe("Eb");
-		}
-	});
-
-	it("favours the selected tier's own qualities", () => {
+	it("favours the selected tier's own qualities (all keys)", () => {
 		const tier4 = new Set(TIERS[4].qualities);
 		let inTier = 0;
 		const draws = 4000;
 		for (let n = 0; n < draws; n++) {
-			if (tier4.has(randomChord(4, "all").quality)) inTier++;
+			if (tier4.has(randomChord(4, "all", "major").quality)) inTier++;
 		}
 		// Uniform over the full level-4 pool would be ~5/23 ≈ 22%; the bias lifts it well past 40%.
 		expect(inTier / draws).toBeGreaterThan(0.4);
+	});
+});
+
+describe("key-aware drill (diatonic + borrowed)", () => {
+	const draws = (level: Level, key: string, tonality: "major" | "minor", n = 400) =>
+		new Set(
+			Array.from({ length: n }, () => randomChord(level, key, tonality).symbol),
+		);
+
+	it("C major L1 stays within the diatonic triads", () => {
+		const allowed = new Set(["C", "Dm", "Em", "F", "G", "Am", "B°"]);
+		for (const s of draws(1, "C", "major")) expect(allowed.has(s)).toBe(true);
+	});
+
+	it("C major L2 stays diatonic (triads + 7ths, cumulative)", () => {
+		const allowed = new Set([
+			// L1 triads
+			"C", "Dm", "Em", "F", "G", "Am", "B°",
+			// L2 sevenths
+			"Cmaj7", "Dm7", "Em7", "Fmaj7", "G7", "Am7", "Bm7♭5",
+		]);
+		for (const s of draws(2, "C", "major")) expect(allowed.has(s)).toBe(true);
+	});
+
+	it("C minor L2 stays diatonic (triads + 7ths, cumulative)", () => {
+		const allowed = new Set([
+			// L1 triads
+			"Cm", "D°", "E♭", "Fm", "G", "A♭", "B♭",
+			// L2 sevenths
+			"Cm7", "Dm7♭5", "E♭maj7", "Fm7", "G7", "A♭maj7", "B♭maj7",
+		]);
+		for (const s of draws(2, "C", "minor")) expect(allowed.has(s)).toBe(true);
+	});
+
+	it("borrowed chords only appear at L4, not L1–L2", () => {
+		const borrowed = ["Fm7", "A♭maj7", "B♭7", "D♭maj7"];
+		const l2 = draws(2, "C", "major");
+		for (const b of borrowed) expect(l2.has(b)).toBe(false);
+		const l4 = draws(4, "C", "major", 800);
+		expect(borrowed.some((b) => l4.has(b))).toBe(true);
 	});
 });
 

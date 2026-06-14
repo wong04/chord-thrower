@@ -20,7 +20,7 @@ export type Degree =
 	| "VII";
 
 /** Interval from the tonic for each scale degree, used to spell roots via Tonal. */
-const DEGREE_INTERVAL: Record<Degree, string> = {
+export const DEGREE_INTERVAL: Record<Degree, string> = {
 	I: "1P",
 	bII: "2m",
 	II: "2M",

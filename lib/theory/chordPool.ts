@@ -1,5 +1,6 @@
 import { formatChord, QualityId } from "./qualities";
 import { KEYS, Instrument, transposeForInstrument } from "./transpose";
+import { randomKeyChord, Tonality } from "./keyHarmony";
 
 export type Level = 1 | 2 | 3 | 4;
 
@@ -60,20 +61,24 @@ function pick<T>(items: readonly T[], rng: () => number): T {
 }
 
 /**
- * Generate a random chord for the drill. The selected tier's own qualities are
- * favoured (so e.g. "Alterations" mostly shows altered chords) while easier
- * qualities from lower tiers still surface.
- * @param keyChoice a specific key from KEYS, or "all" to draw a random root.
+ * Generate a random chord for the drill.
+ * - `keyChoice === "all"`: chromatic mode — any root + a quality from the tier
+ *   pool (favouring the selected tier's own qualities).
+ * - a specific key: harmonic mode — a chord that belongs to that key (diatonic,
+ *   plus borrowed/secondary chords at higher levels), per `tonality`.
  */
 export function randomChord(
 	level: Level,
 	keyChoice: string | "all",
+	tonality: Tonality,
 	instrument: Instrument = "C",
 	rng: () => number = Math.random,
 ): Chord {
+	if (keyChoice !== "all") {
+		return randomKeyChord(keyChoice, tonality, level, instrument, rng);
+	}
 	const fromTier = level > 1 && rng() < TIER_BIAS;
 	const quality = pick(fromTier ? TIERS[level].qualities : qualityPool(level), rng);
-	const concertRoot = keyChoice === "all" ? pick(KEYS, rng) : keyChoice;
-	const root = transposeForInstrument(concertRoot, instrument);
+	const root = transposeForInstrument(pick(KEYS, rng), instrument);
 	return { root, quality, symbol: formatChord(root, quality) };
 }
