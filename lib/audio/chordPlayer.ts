@@ -58,8 +58,11 @@ export class ChordPlayer {
 		if (!this.sampler.loaded) return; // samples not ready yet — skip silently
 		const freqs = voicing(root, quality);
 		if (!freqs.length) return;
-		// Never schedule in the past — that silently drops the chord.
-		const at = Math.max(time, Tone.now() + 0.02);
+		// Schedule exactly on the beat `time` (the click uses the same value). Only nudge
+		// forward if `time` is already in the past — compare against the raw audio clock,
+		// not Tone.now() (which adds the look-ahead and would push every chord late).
+		const now = Tone.getContext().currentTime;
+		const at = time > now ? time : now + 0.005;
 		this.sampler.triggerAttackRelease(freqs, Math.max(0.1, durationSeconds * 0.95), at, 0.5);
 	}
 

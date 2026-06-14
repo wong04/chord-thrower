@@ -103,7 +103,7 @@ export function DrillControls({
 					</select>
 				</Field>
 
-				<Field label="Next chord">
+				<Field label="Show Next Chord">
 					<select
 						value={nextPreview}
 						onChange={(e) => onNextPreviewChange(e.target.value as NextPreview)}
