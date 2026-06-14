@@ -27,7 +27,7 @@ export function ChordDisplay({
 				</div>
 			) : (
 				<div
-					className="font-display font-bold leading-none tracking-tight break-words"
+					className="font-display font-medium leading-none tracking-tight break-words"
 					style={{
 						fontSize: chordSize,
 						textShadow: "0 0 48px rgba(255, 93, 77, 0.28)",

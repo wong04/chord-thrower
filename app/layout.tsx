@@ -5,7 +5,7 @@ import "./globals.css";
 const displayFont = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const sansFont = DM_Sans({

@@ -160,7 +160,7 @@ export default function Home() {
 		<main ref={mainRef} className="flex flex-1 flex-col items-center gap-8 bg-background px-4 py-8">
 			{!running && (
 				<header className="text-center">
-					<h1 className="font-display text-3xl font-extrabold tracking-tight">Chord Thrower</h1>
+					<h1 className="font-display text-3xl font-semibold tracking-tight">Chord Thrower</h1>
 					<p className="mt-1 text-sm text-muted">Drill chords and jazz patterns in time.</p>
 				</header>
 			)}
