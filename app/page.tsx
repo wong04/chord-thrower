@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMetronome } from "@/lib/audio/useMetronome";
+import { useChordPlayer } from "@/lib/audio/useChordPlayer";
 import { useDrill } from "@/lib/drill/useDrill";
 import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
@@ -22,6 +23,7 @@ export default function Home() {
 	const [bpm, setBpm] = useState(100);
 	const [beatsPerBar, setBeatsPerBar] = useState(4);
 	const [muted, setMuted] = useState(false);
+	const [audioEnabled, setAudioEnabled] = useState(false);
 	const [instrument, setInstrument] = useState<Instrument>("C");
 
 	// Drill settings
@@ -37,7 +39,17 @@ export default function Home() {
 	const [rampStep, setRampStep] = useState(2);
 	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
 
-	const drill = useDrill({ level, keyChoice, instrument, barsPerChord });
+	const playChord = useChordPlayer(audioEnabled);
+	const secondsPerBeat = 60 / bpm;
+
+	const drill = useDrill({
+		level,
+		keyChoice,
+		instrument,
+		barsPerChord,
+		onChordChange: (chord, time) =>
+			playChord(chord.root, chord.quality, time, barsPerChord * beatsPerBar * secondsPerBeat),
+	});
 	const pattern = usePattern({
 		progression,
 		instrument,
@@ -45,6 +57,8 @@ export default function Home() {
 		onRep: () => {
 			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
 		},
+		onChordChange: (chord, time) =>
+			playChord(chord.root, chord.quality, time, chord.beats * secondsPerBeat),
 	});
 
 	const metronome = useMetronome({
@@ -106,6 +120,8 @@ export default function Home() {
 						onBeatsPerBarChange={setBeatsPerBar}
 						muted={muted}
 						onMutedChange={setMuted}
+						audioEnabled={audioEnabled}
+						onAudioEnabledChange={setAudioEnabled}
 						beat={metronome.beat}
 						counting={metronome.counting}
 					/>
@@ -140,6 +156,8 @@ export default function Home() {
 						onBeatsPerBarChange={setBeatsPerBar}
 						muted={muted}
 						onMutedChange={setMuted}
+						audioEnabled={audioEnabled}
+						onAudioEnabledChange={setAudioEnabled}
 						beat={metronome.beat}
 						counting={metronome.counting}
 					/>

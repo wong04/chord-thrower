@@ -11,6 +11,8 @@ export type DrillSettings = {
 	instrument: Instrument;
 	/** How many bars each chord is held for. */
 	barsPerChord: number;
+	/** Called when a chord starts sounding, with its audio-clock time. */
+	onChordChange?: (chord: Chord, time: number) => void;
 };
 
 export type DrillState = {
@@ -39,6 +41,7 @@ export function useDrill(settings: DrillSettings): DrillState {
 
 	const [current, setCurrent] = useState<Chord | null>(null);
 	const [next, setNext] = useState<Chord | null>(null);
+	const currentRef = useRef<Chord | null>(null);
 	const nextRef = useRef<Chord | null>(null);
 
 	const reset = useCallback(() => {
@@ -46,6 +49,7 @@ export function useDrill(settings: DrillSettings): DrillState {
 		const second = differentChord(settingsRef.current, first);
 		setCurrent(first);
 		setNext(second);
+		currentRef.current = first;
 		nextRef.current = second;
 	}, []);
 
@@ -55,14 +59,22 @@ export function useDrill(settings: DrillSettings): DrillState {
 	}, [current, reset]);
 
 	const onTick = useCallback((tick: Tick) => {
-		if (tick.counting || tick.beat !== 0 || tick.bar <= 0) return;
+		if (tick.counting || tick.beat !== 0) return;
+
+		// First downbeat: sound the chord already on screen.
+		if (tick.bar === 0) {
+			if (currentRef.current) settingsRef.current.onChordChange?.(currentRef.current, tick.time);
+			return;
+		}
 		if (tick.bar % settingsRef.current.barsPerChord !== 0) return;
 
 		const promoted = nextRef.current;
 		const upcoming = differentChord(settingsRef.current, promoted);
 		setCurrent(promoted);
 		setNext(upcoming);
+		currentRef.current = promoted;
 		nextRef.current = upcoming;
+		if (promoted) settingsRef.current.onChordChange?.(promoted, tick.time);
 	}, []);
 
 	return { current, next, onTick, reset };

@@ -21,6 +21,8 @@ export function TransportControls({
 	onBeatsPerBarChange,
 	muted,
 	onMutedChange,
+	audioEnabled,
+	onAudioEnabledChange,
 	beat,
 	counting,
 }: {
@@ -32,6 +34,8 @@ export function TransportControls({
 	onBeatsPerBarChange: (beats: number) => void;
 	muted: boolean;
 	onMutedChange: (muted: boolean) => void;
+	audioEnabled: boolean;
+	onAudioEnabledChange: (enabled: boolean) => void;
 	beat: number;
 	counting: boolean;
 }) {
@@ -50,15 +54,30 @@ export function TransportControls({
 					{running ? "Stop" : "Start"}
 				</button>
 				<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
-				<button
-					type="button"
-					onClick={() => onMutedChange(!muted)}
-					aria-pressed={muted}
-					className="rounded-full border border-foreground/15 px-3 py-2 text-sm text-foreground/70 hover:text-foreground"
-					title={muted ? "Unmute metronome" : "Mute metronome"}
-				>
-					{muted ? "🔇 Click" : "🔊 Click"}
-				</button>
+				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={() => onAudioEnabledChange(!audioEnabled)}
+						aria-pressed={audioEnabled}
+						className={`rounded-full border px-3 py-2 text-sm transition-colors ${
+							audioEnabled
+								? "border-foreground/30 text-foreground"
+								: "border-foreground/15 text-foreground/50 hover:text-foreground"
+						}`}
+						title={audioEnabled ? "Mute chord sounds" : "Play chord sounds"}
+					>
+						🎹 Chords
+					</button>
+					<button
+						type="button"
+						onClick={() => onMutedChange(!muted)}
+						aria-pressed={muted}
+						className="rounded-full border border-foreground/15 px-3 py-2 text-sm text-foreground/70 hover:text-foreground"
+						title={muted ? "Unmute metronome" : "Mute metronome"}
+					>
+						{muted ? "🔇 Click" : "🔊 Click"}
+					</button>
+				</div>
 			</div>
 
 			<div className="flex items-center gap-3">

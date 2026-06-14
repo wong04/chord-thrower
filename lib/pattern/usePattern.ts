@@ -14,6 +14,8 @@ export type PatternSettings = {
 	keyCycle: KeyCycle;
 	/** Fired when a full repetition of the progression completes. */
 	onRep?: () => void;
+	/** Called when a new chord starts sounding, with its audio-clock time. */
+	onChordChange?: (chord: ResolvedChord, time: number) => void;
 };
 
 export type Bar = { chords: ResolvedChord[]; startIndex: number };
@@ -74,6 +76,10 @@ export function usePattern(settings: PatternSettings): PatternState {
 	useEffect(() => {
 		cycleRef.current = keyCycle;
 	});
+	const onChordChangeRef = useRef(settings.onChordChange);
+	useEffect(() => {
+		onChordChangeRef.current = settings.onChordChange;
+	});
 
 	const [tonic, setTonic] = useState(progression.defaultTonic);
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -107,13 +113,17 @@ export function usePattern(settings: PatternSettings): PatternState {
 
 	const startsRef = useRef(starts);
 	const totalRef = useRef(total);
+	const chordsRef = useRef(chords);
 	useEffect(() => {
 		startsRef.current = starts;
 		totalRef.current = total;
+		chordsRef.current = chords;
 	});
 
+	const lastIdxRef = useRef(-1);
 	const reset = useCallback(() => {
 		beatRef.current = 0;
+		lastIdxRef.current = -1;
 		setActiveIndex(0);
 	}, []);
 
@@ -128,6 +138,11 @@ export function usePattern(settings: PatternSettings): PatternState {
 			else break;
 		}
 		setActiveIndex(idx);
+		if (idx !== lastIdxRef.current) {
+			lastIdxRef.current = idx;
+			const chord = chordsRef.current[idx];
+			if (chord) onChordChangeRef.current?.(chord, tick.time);
+		}
 
 		beatRef.current += 1;
 		if (beatRef.current >= totalRef.current) {
