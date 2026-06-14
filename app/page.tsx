@@ -37,6 +37,7 @@ export default function Home() {
 	const [level, setLevel] = usePersistentState<Level>("level", 1);
 	const [keyChoice, setKeyChoice] = usePersistentState<string | "all">("keyChoice", "all");
 	const [tonality, setTonality] = usePersistentState<Tonality>("tonality", "major");
+	const [showRoman, setShowRoman] = usePersistentState("showRoman", false);
 	const [barsPerChord, setBarsPerChord] = usePersistentState("barsPerChord", 2);
 	const [nextPreview, setNextPreview] = usePersistentState<NextPreview>("nextPreview", "auto");
 
@@ -143,6 +144,8 @@ export default function Home() {
 				showNext={drillShowNext}
 				countdown={countdown}
 				focused={running}
+				roman={drill.current?.roman}
+				showRoman={showRoman && keyChoice !== "all"}
 			/>
 		) : (
 			<div className="flex flex-col items-center gap-3">
@@ -216,6 +219,8 @@ export default function Home() {
 						onKeyChange={setKeyChoice}
 						tonality={tonality}
 						onTonalityChange={setTonality}
+						showRoman={showRoman}
+						onShowRomanChange={setShowRoman}
 						barsPerChord={barsPerChord}
 						onBarsChange={setBarsPerChord}
 						instrument={instrument}

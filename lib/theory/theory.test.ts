@@ -3,6 +3,7 @@ import { Note } from "tonal";
 import { formatChord } from "./qualities";
 import { KEYS, transposeForInstrument } from "./transpose";
 import { Level, qualityPool, randomChord, TIERS } from "./chordPool";
+import { tonicChord } from "./keyHarmony";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -131,6 +132,36 @@ describe("key-aware drill (diatonic + borrowed)", () => {
 		for (const b of borrowed) expect(l2.has(b)).toBe(false);
 		const l4 = draws(4, "C", "major", 800);
 		expect(borrowed.some((b) => l4.has(b))).toBe(true);
+	});
+});
+
+describe("tonic chord (first chord on start)", () => {
+	it("is the key's I chord at the current level", () => {
+		expect(tonicChord("Eb", "major", 2).symbol).toBe("E♭maj7");
+		expect(tonicChord("Eb", "major", 2).roman).toBe("Imaj7");
+		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭");
+		expect(tonicChord("C", "minor", 2).symbol).toBe("Cm7");
+		expect(tonicChord("C", "minor", 2).roman).toBe("i7");
+	});
+});
+
+describe("roman-numeral labels (key mode)", () => {
+	it("labels chords by harmonic function in C major", () => {
+		const roman = new Map<string, string>();
+		for (let n = 0; n < 3000; n++) {
+			const ch = randomChord(4, "C", "major");
+			if (ch.roman) roman.set(ch.symbol, ch.roman);
+		}
+		expect(roman.get("G7")).toBe("V7");
+		expect(roman.get("Dm7")).toBe("ii7");
+		expect(roman.get("A7")).toBe("V7/ii"); // secondary dominant
+		expect(roman.get("A♭maj7")).toBe("♭VImaj7"); // borrowed
+	});
+
+	it("chromatic 'all keys' chords carry no roman", () => {
+		for (let n = 0; n < 100; n++) {
+			expect(randomChord(4, "all", "major").roman).toBeUndefined();
+		}
 	});
 });
 

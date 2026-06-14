@@ -51,7 +51,7 @@ export function qualityPool(level: Level): QualityId[] {
 	return pool;
 }
 
-export type Chord = { root: string; quality: QualityId; symbol: string };
+export type Chord = { root: string; quality: QualityId; symbol: string; roman?: string };
 
 /** Probability that a draw comes from the selected tier rather than the whole pool. */
 const TIER_BIAS = 0.6;

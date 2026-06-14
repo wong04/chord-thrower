@@ -16,6 +16,8 @@ export function DrillControls({
 	onKeyChange,
 	tonality,
 	onTonalityChange,
+	showRoman,
+	onShowRomanChange,
 	barsPerChord,
 	onBarsChange,
 	instrument,
@@ -29,6 +31,8 @@ export function DrillControls({
 	onKeyChange: (key: string | "all") => void;
 	tonality: Tonality;
 	onTonalityChange: (tonality: Tonality) => void;
+	showRoman: boolean;
+	onShowRomanChange: (show: boolean) => void;
 	barsPerChord: number;
 	onBarsChange: (bars: number) => void;
 	instrument: Instrument;
@@ -95,6 +99,17 @@ export function DrillControls({
 								</button>
 							))}
 						</div>
+					)}
+					{keyMode && (
+						<label className="mt-1 flex items-center gap-2 text-xs text-muted">
+							<input
+								type="checkbox"
+								checked={showRoman}
+								onChange={(e) => onShowRomanChange(e.target.checked)}
+								className="h-4 w-4 accent-accent"
+							/>
+							Roman numerals
+						</label>
 					)}
 				</div>
 

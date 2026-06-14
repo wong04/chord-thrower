@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import { Tick } from "@/lib/audio/metronome";
 import { Chord, Level, randomChord } from "@/lib/theory/chordPool";
-import { Tonality } from "@/lib/theory/keyHarmony";
+import { Tonality, tonicChord } from "@/lib/theory/keyHarmony";
 import { Instrument } from "@/lib/theory/transpose";
 
 export type DrillSettings = {
@@ -53,8 +53,13 @@ export function useDrill(settings: DrillSettings): DrillState {
 	const nextRef = useRef<Chord | null>(null);
 
 	const reset = useCallback(() => {
-		const first = differentChord(settingsRef.current, null);
-		const second = differentChord(settingsRef.current, first);
+		const s = settingsRef.current;
+		// In key mode, always open on the tonic chord at the current level.
+		const first =
+			s.keyChoice === "all"
+				? differentChord(s, null)
+				: tonicChord(s.keyChoice, s.tonality, s.level, s.instrument);
+		const second = differentChord(s, first);
 		setCurrent(first);
 		setNext(second);
 		currentRef.current = first;
