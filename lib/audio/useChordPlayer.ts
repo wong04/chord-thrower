@@ -19,6 +19,12 @@ export function useChordPlayer(enabled: boolean): PlayChord {
 		enabledRef.current = enabled;
 	});
 
+	// Create the player as soon as audio is enabled so the piano samples preload
+	// before the user presses Start.
+	useEffect(() => {
+		if (enabled && !playerRef.current) playerRef.current = new ChordPlayer();
+	}, [enabled]);
+
 	useEffect(() => {
 		return () => {
 			playerRef.current?.dispose();
