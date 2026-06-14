@@ -30,7 +30,9 @@ export type MetronomeControls = {
 export function useMetronome(config: MetronomeConfig): MetronomeControls {
 	const metronomeRef = useRef<Metronome | null>(null);
 	const onTickRef = useRef(config.onTick);
-	onTickRef.current = config.onTick;
+	useEffect(() => {
+		onTickRef.current = config.onTick;
+	});
 
 	const [running, setRunning] = useState(false);
 	const [beat, setBeat] = useState(-1);

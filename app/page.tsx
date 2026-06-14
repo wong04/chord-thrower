@@ -2,17 +2,50 @@
 
 import { useState } from "react";
 import { useMetronome } from "@/lib/audio/useMetronome";
+import { useDrill } from "@/lib/drill/useDrill";
+import { Level } from "@/lib/theory/chordPool";
+import { Instrument } from "@/lib/theory/transpose";
 import { TransportControls } from "@/components/TransportControls";
+import { ChordDisplay } from "@/components/ChordDisplay";
+import { DrillControls, NextPreview } from "@/components/DrillControls";
 
 type Mode = "drill" | "patterns";
 
 export default function Home() {
 	const [mode, setMode] = useState<Mode>("drill");
+
+	// Shared / transport settings
 	const [bpm, setBpm] = useState(100);
 	const [beatsPerBar, setBeatsPerBar] = useState(4);
 	const [muted, setMuted] = useState(false);
+	const [instrument, setInstrument] = useState<Instrument>("C");
 
-	const metronome = useMetronome({ bpm, beatsPerBar, countInBars: 0, muted });
+	// Drill settings
+	const [level, setLevel] = useState<Level>(1);
+	const [keyChoice, setKeyChoice] = useState<string | "all">("all");
+	const [barsPerChord, setBarsPerChord] = useState(2);
+	const [nextPreview, setNextPreview] = useState<NextPreview>("auto");
+
+	const drill = useDrill({ level, keyChoice, instrument, barsPerChord });
+
+	const metronome = useMetronome({
+		bpm,
+		beatsPerBar,
+		countInBars: 0,
+		muted,
+		onTick: mode === "drill" ? drill.onTick : undefined,
+	});
+
+	const handleToggle = () => {
+		if (metronome.running) {
+			metronome.stop();
+			return;
+		}
+		if (mode === "drill") drill.reset();
+		void metronome.start();
+	};
+
+	const showNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
 
 	return (
 		<main className="flex flex-1 flex-col items-center gap-8 px-4 py-8">
@@ -30,27 +63,44 @@ export default function Home() {
 				</TabButton>
 			</nav>
 
-			<section className="flex min-h-40 flex-col items-center justify-center">
-				<div className="text-7xl font-bold tracking-tight tabular-nums">
-					{mode === "drill" ? "Cmaj7" : "ii–V–I"}
-				</div>
-				<p className="mt-4 text-sm text-foreground/50">
-					{mode === "drill" ? "Random chord drill" : "Jazz pattern practice"} — coming together.
-				</p>
-			</section>
-
-			<TransportControls
-				running={metronome.running}
-				onToggle={metronome.toggle}
-				bpm={bpm}
-				onBpmChange={setBpm}
-				beatsPerBar={beatsPerBar}
-				onBeatsPerBarChange={setBeatsPerBar}
-				muted={muted}
-				onMutedChange={setMuted}
-				beat={metronome.beat}
-				counting={metronome.counting}
-			/>
+			{mode === "drill" ? (
+				<>
+					<ChordDisplay
+						symbol={drill.current?.symbol ?? null}
+						nextSymbol={drill.next?.symbol}
+						showNext={showNext}
+					/>
+					<TransportControls
+						running={metronome.running}
+						onToggle={handleToggle}
+						bpm={bpm}
+						onBpmChange={setBpm}
+						beatsPerBar={beatsPerBar}
+						onBeatsPerBarChange={setBeatsPerBar}
+						muted={muted}
+						onMutedChange={setMuted}
+						beat={metronome.beat}
+						counting={metronome.counting}
+					/>
+					<DrillControls
+						level={level}
+						onLevelChange={setLevel}
+						keyChoice={keyChoice}
+						onKeyChange={setKeyChoice}
+						barsPerChord={barsPerChord}
+						onBarsChange={setBarsPerChord}
+						instrument={instrument}
+						onInstrumentChange={setInstrument}
+						nextPreview={nextPreview}
+						onNextPreviewChange={setNextPreview}
+					/>
+				</>
+			) : (
+				<section className="flex min-h-44 flex-col items-center justify-center">
+					<div className="text-5xl font-bold tracking-tight">ii–V–I</div>
+					<p className="mt-4 text-sm text-foreground/50">Jazz pattern practice — coming next.</p>
+				</section>
+			)}
 		</main>
 	);
 }
