@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useDrill } from "@/lib/drill/useDrill";
+import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
 import { Instrument } from "@/lib/theory/transpose";
-import { TransportControls } from "@/components/TransportControls";
+import { PROGRESSIONS } from "@/lib/theory/progressions";
+import { MAX_BPM, TransportControls } from "@/components/TransportControls";
 import { ChordDisplay } from "@/components/ChordDisplay";
 import { DrillControls, NextPreview } from "@/components/DrillControls";
+import { PatternControls } from "@/components/PatternControls";
+import { PatternChart } from "@/components/PatternChart";
 
 type Mode = "drill" | "patterns";
 
@@ -26,15 +30,36 @@ export default function Home() {
 	const [barsPerChord, setBarsPerChord] = useState(2);
 	const [nextPreview, setNextPreview] = useState<NextPreview>("auto");
 
+	// Pattern settings
+	const [progressionId, setProgressionId] = useState(PROGRESSIONS[0].id);
+	const [keyCycle, setKeyCycle] = useState<KeyCycle>("lock");
+	const [tempoRamp, setTempoRamp] = useState(false);
+	const [rampStep, setRampStep] = useState(2);
+	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
+
 	const drill = useDrill({ level, keyChoice, instrument, barsPerChord });
+	const pattern = usePattern({
+		progression,
+		instrument,
+		keyCycle,
+		onRep: () => {
+			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
+		},
+	});
 
 	const metronome = useMetronome({
 		bpm,
 		beatsPerBar,
 		countInBars: 0,
 		muted,
-		onTick: mode === "drill" ? drill.onTick : undefined,
+		onTick: mode === "drill" ? drill.onTick : pattern.onTick,
 	});
+
+	// Stop the transport when switching modes so the engines don't overlap.
+	const { stop } = metronome;
+	useEffect(() => {
+		stop();
+	}, [mode, stop]);
 
 	const handleToggle = () => {
 		if (metronome.running) {
@@ -42,10 +67,12 @@ export default function Home() {
 			return;
 		}
 		if (mode === "drill") drill.reset();
+		else pattern.reset();
 		void metronome.start();
 	};
 
 	const showNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
+	const activeChord = pattern.chords[pattern.activeIndex];
 
 	return (
 		<main className="flex flex-1 flex-col items-center gap-8 px-4 py-8">
@@ -96,10 +123,39 @@ export default function Home() {
 					/>
 				</>
 			) : (
-				<section className="flex min-h-44 flex-col items-center justify-center">
-					<div className="text-5xl font-bold tracking-tight">ii–V–I</div>
-					<p className="mt-4 text-sm text-foreground/50">Jazz pattern practice — coming next.</p>
-				</section>
+				<>
+					<div className="flex flex-col items-center gap-1">
+						<div className="text-6xl font-bold tracking-tight sm:text-7xl">
+							{activeChord?.symbol ?? "—"}
+						</div>
+						<div className="text-sm text-foreground/45">key of {pattern.tonic}</div>
+					</div>
+					<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} />
+					<TransportControls
+						running={metronome.running}
+						onToggle={handleToggle}
+						bpm={bpm}
+						onBpmChange={setBpm}
+						beatsPerBar={beatsPerBar}
+						onBeatsPerBarChange={setBeatsPerBar}
+						muted={muted}
+						onMutedChange={setMuted}
+						beat={metronome.beat}
+						counting={metronome.counting}
+					/>
+					<PatternControls
+						progressionId={progressionId}
+						onProgressionChange={setProgressionId}
+						keyCycle={keyCycle}
+						onKeyCycleChange={setKeyCycle}
+						instrument={instrument}
+						onInstrumentChange={setInstrument}
+						tempoRamp={tempoRamp}
+						onTempoRampChange={setTempoRamp}
+						rampStep={rampStep}
+						onRampStepChange={setRampStep}
+					/>
+				</>
 			)}
 		</main>
 	);
