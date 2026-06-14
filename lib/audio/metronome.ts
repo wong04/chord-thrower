@@ -32,6 +32,16 @@ export class Metronome {
 	accent = true;
 	onTick: ((tick: Tick) => void) | null = null;
 
+	private _clickVolume = 0.8;
+	/** Click level as linear gain (0–1). */
+	get clickVolume(): number {
+		return this._clickVolume;
+	}
+	set clickVolume(value: number) {
+		this._clickVolume = value;
+		if (this.synth) this.synth.volume.value = Tone.gainToDb(value);
+	}
+
 	get bpm(): number {
 		return this.transport.bpm.value;
 	}
@@ -48,8 +58,8 @@ export class Metronome {
 			this.synth = new Tone.Synth({
 				oscillator: { type: "triangle" },
 				envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.02 },
-				volume: -6,
 			}).toDestination();
+			this.synth.volume.value = Tone.gainToDb(this._clickVolume);
 		}
 		return this.synth;
 	}

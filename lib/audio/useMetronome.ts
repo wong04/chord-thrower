@@ -10,6 +10,8 @@ export type MetronomeConfig = {
 	beatsPerBar: number;
 	countInBars: number;
 	muted: boolean;
+	/** Click level as linear gain (0–1). */
+	clickVolume: number;
 	/** Engine hook called on every tick (sample-accurately, via Tone.Draw). */
 	onTick?: (tick: Tick) => void;
 };
@@ -64,7 +66,15 @@ export function useMetronome(config: MetronomeConfig): MetronomeControls {
 		m.beatsPerBar = config.beatsPerBar;
 		m.countInBars = config.countInBars;
 		m.muted = config.muted;
-	}, [config.bpm, config.beatsPerBar, config.countInBars, config.muted, getMetronome]);
+		m.clickVolume = config.clickVolume;
+	}, [
+		config.bpm,
+		config.beatsPerBar,
+		config.countInBars,
+		config.muted,
+		config.clickVolume,
+		getMetronome,
+	]);
 
 	useEffect(() => {
 		return () => {

@@ -25,6 +25,10 @@ export function TransportControls({
 	onAudioEnabledChange,
 	countIn,
 	onCountInChange,
+	clickVolume,
+	onClickVolumeChange,
+	chordVolume,
+	onChordVolumeChange,
 	beat,
 	counting,
 }: {
@@ -40,6 +44,10 @@ export function TransportControls({
 	onAudioEnabledChange: (enabled: boolean) => void;
 	countIn: boolean;
 	onCountInChange: (enabled: boolean) => void;
+	clickVolume: number;
+	onClickVolumeChange: (volume: number) => void;
+	chordVolume: number;
+	onChordVolumeChange: (volume: number) => void;
 	beat: number;
 	counting: boolean;
 }) {
@@ -100,6 +108,16 @@ export function TransportControls({
 				<span className="w-16 text-right text-sm tabular-nums text-foreground/80">{bpm} bpm</span>
 			</div>
 
+			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				<VolumeSlider label="🔊 Click" value={clickVolume} onChange={onClickVolumeChange} />
+				<VolumeSlider
+					label="🎹 Chords"
+					value={chordVolume}
+					onChange={onChordVolumeChange}
+					disabled={!audioEnabled}
+				/>
+			</div>
+
 			<div className="flex flex-wrap items-center gap-3">
 				<span className="w-24 shrink-0 text-sm text-foreground/60">Time</span>
 				<div className="inline-flex rounded-full border border-foreground/15 p-0.5">
@@ -128,6 +146,38 @@ export function TransportControls({
 					Count-in
 				</label>
 			</div>
+		</div>
+	);
+}
+
+function VolumeSlider({
+	label,
+	value,
+	onChange,
+	disabled = false,
+}: {
+	label: string;
+	value: number;
+	onChange: (value: number) => void;
+	disabled?: boolean;
+}) {
+	return (
+		<div className={`flex items-center gap-2 ${disabled ? "opacity-40" : ""}`}>
+			<span className="w-16 shrink-0 text-sm text-foreground/60">{label}</span>
+			<input
+				type="range"
+				min={0}
+				max={1}
+				step={0.01}
+				value={value}
+				disabled={disabled}
+				onChange={(e) => onChange(Number(e.target.value))}
+				aria-label={`${label} volume`}
+				className="flex-1 accent-foreground"
+			/>
+			<span className="w-9 text-right text-sm tabular-nums text-foreground/80">
+				{Math.round(value * 100)}
+			</span>
 		</div>
 	);
 }

@@ -27,6 +27,8 @@ export default function Home() {
 	const [audioEnabled, setAudioEnabled] = usePersistentState("audioEnabled", false);
 	const [countIn, setCountIn] = usePersistentState("countIn", false);
 	const [instrument, setInstrument] = usePersistentState<Instrument>("instrument", "C");
+	const [clickVolume, setClickVolume] = usePersistentState("clickVolume", 0.8);
+	const [chordVolume, setChordVolume] = usePersistentState("chordVolume", 0.8);
 
 	// Drill settings
 	const [level, setLevel] = usePersistentState<Level>("level", 1);
@@ -41,7 +43,7 @@ export default function Home() {
 	const [rampStep, setRampStep] = usePersistentState("rampStep", 2);
 	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
 
-	const playChord = useChordPlayer(audioEnabled);
+	const playChord = useChordPlayer(audioEnabled, chordVolume);
 	const secondsPerBeat = 60 / bpm;
 
 	const drill = useDrill({
@@ -68,6 +70,7 @@ export default function Home() {
 		beatsPerBar,
 		countInBars: countIn ? 1 : 0,
 		muted,
+		clickVolume,
 		onTick: mode === "drill" ? drill.onTick : pattern.onTick,
 	});
 
@@ -126,6 +129,10 @@ export default function Home() {
 						onAudioEnabledChange={setAudioEnabled}
 						countIn={countIn}
 						onCountInChange={setCountIn}
+						clickVolume={clickVolume}
+						onClickVolumeChange={setClickVolume}
+						chordVolume={chordVolume}
+						onChordVolumeChange={setChordVolume}
 						beat={metronome.beat}
 						counting={metronome.counting}
 					/>
@@ -164,6 +171,10 @@ export default function Home() {
 						onAudioEnabledChange={setAudioEnabled}
 						countIn={countIn}
 						onCountInChange={setCountIn}
+						clickVolume={clickVolume}
+						onClickVolumeChange={setClickVolume}
+						chordVolume={chordVolume}
+						onChordVolumeChange={setChordVolume}
 						beat={metronome.beat}
 						counting={metronome.counting}
 					/>

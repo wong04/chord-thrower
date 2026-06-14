@@ -39,14 +39,19 @@ const SALAMANDER_URLS: Record<string, string> = {
 export class ChordPlayer {
 	private sampler: Tone.Sampler;
 
-	constructor() {
+	constructor(volume = 0.8) {
 		// Construct eagerly so the samples start downloading right away (preload).
 		this.sampler = new Tone.Sampler({
 			urls: SALAMANDER_URLS,
 			baseUrl: SALAMANDER_BASE_URL,
 			release: 1,
-			volume: -6,
+			volume: Tone.gainToDb(volume),
 		}).toDestination();
+	}
+
+	/** Set the chord level as linear gain (0–1). */
+	setVolume(volume: number): void {
+		this.sampler.volume.value = Tone.gainToDb(volume);
 	}
 
 	play(root: string, quality: QualityId, time: number, durationSeconds: number): void {
