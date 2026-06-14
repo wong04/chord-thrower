@@ -4,20 +4,43 @@ export function ChordDisplay({
 	symbol,
 	nextSymbol,
 	showNext,
+	countdown,
+	focused = false,
 }: {
 	symbol: string | null;
 	nextSymbol?: string | null;
 	showNext: boolean;
+	/** Count-in number to show instead of the chord, or null. */
+	countdown?: number | null;
+	focused?: boolean;
 }) {
+	const chordSize = focused ? "clamp(4.5rem, 26vw, 18rem)" : "clamp(3rem, 15vw, 9rem)";
+
 	return (
-		<div className="flex min-h-44 flex-col items-center justify-center gap-3 px-2 text-center">
-			<div className="text-6xl font-bold leading-none tracking-tight break-words sm:text-8xl">
-				{symbol ?? "—"}
-			</div>
-			<div className="h-6 text-base text-foreground/45">
-				{showNext && nextSymbol ? (
+		<div className="flex min-h-44 flex-col items-center justify-center gap-4 px-2 text-center">
+			{countdown != null ? (
+				<div
+					className="font-mono font-medium leading-none text-accent tabular-nums"
+					style={{ fontSize: focused ? "clamp(6rem, 30vw, 20rem)" : "clamp(4rem, 20vw, 11rem)" }}
+				>
+					{countdown}
+				</div>
+			) : (
+				<div
+					className="font-display font-bold leading-none tracking-tight break-words"
+					style={{
+						fontSize: chordSize,
+						textShadow: "0 0 48px rgba(255, 93, 77, 0.28)",
+					}}
+				>
+					{symbol ?? "—"}
+				</div>
+			)}
+
+			<div className="h-6 font-sans text-sm uppercase tracking-[0.2em] text-muted">
+				{countdown == null && showNext && nextSymbol ? (
 					<span>
-						next: <span className="font-medium text-foreground/70">{nextSymbol}</span>
+						next <span className="ml-1 font-semibold text-foreground/80">{nextSymbol}</span>
 					</span>
 				) : null}
 			</div>

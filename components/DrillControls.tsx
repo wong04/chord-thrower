@@ -31,9 +31,9 @@ export function DrillControls({
 	onNextPreviewChange: (value: NextPreview) => void;
 }) {
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-5 rounded-2xl border border-foreground/10 p-5">
+		<div className="flex w-full max-w-xl flex-col gap-5 rounded-2xl border border-white/10 bg-surface/50 p-5">
 			<div className="flex flex-col gap-2">
-				<span className="text-sm text-foreground/60">Difficulty</span>
+				<span className="text-sm text-muted">Difficulty</span>
 				<div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
 					{([1, 2, 3, 4] as Level[]).map((l) => (
 						<button
@@ -42,8 +42,8 @@ export function DrillControls({
 							onClick={() => onLevelChange(l)}
 							className={`rounded-lg px-2 py-2 text-center text-xs font-medium transition-colors ${
 								level === l
-									? "bg-foreground text-background"
-									: "bg-foreground/5 text-foreground/70 hover:bg-foreground/10"
+									? "bg-accent text-black"
+									: "bg-white/5 text-muted hover:bg-white/10"
 							}`}
 							title={TIERS[l].description}
 						>
@@ -51,7 +51,7 @@ export function DrillControls({
 						</button>
 					))}
 				</div>
-				<span className="text-xs text-foreground/45">{TIERS[level].description}</span>
+				<span className="text-xs text-muted/70">{TIERS[level].description}</span>
 			</div>
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -59,7 +59,7 @@ export function DrillControls({
 					<select
 						value={keyChoice}
 						onChange={(e) => onKeyChange(e.target.value)}
-						className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
 						<option value="all">All keys (random)</option>
 						{KEYS.map((k) => (
@@ -71,7 +71,7 @@ export function DrillControls({
 				</Field>
 
 				<Field label="Bars per chord">
-					<div className="inline-flex rounded-full border border-foreground/15 p-0.5">
+					<div className="inline-flex rounded-full border border-white/15 p-0.5">
 						{BARS_OPTIONS.map((b) => (
 							<button
 								key={b}
@@ -79,8 +79,8 @@ export function DrillControls({
 								onClick={() => onBarsChange(b)}
 								className={`flex-1 rounded-full px-3 py-1 text-sm transition-colors ${
 									barsPerChord === b
-										? "bg-foreground text-background"
-										: "text-foreground/60 hover:text-foreground"
+										? "bg-accent text-black"
+										: "text-muted hover:text-foreground"
 								}`}
 							>
 								{b}
@@ -93,7 +93,7 @@ export function DrillControls({
 					<select
 						value={instrument}
 						onChange={(e) => onInstrumentChange(e.target.value as Instrument)}
-						className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
 						{INSTRUMENTS.map((inst) => (
 							<option key={inst.id} value={inst.id}>
@@ -107,7 +107,7 @@ export function DrillControls({
 					<select
 						value={nextPreview}
 						onChange={(e) => onNextPreviewChange(e.target.value as NextPreview)}
-						className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
 						<option value="auto">Auto (by difficulty)</option>
 						<option value="show">Always show</option>
@@ -122,7 +122,7 @@ export function DrillControls({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<label className="flex flex-col gap-1.5">
-			<span className="text-sm text-foreground/60">{label}</span>
+			<span className="text-sm text-muted">{label}</span>
 			{children}
 		</label>
 	);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePersistentState } from "@/lib/storage/usePersistentState";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useChordPlayer } from "@/lib/audio/useChordPlayer";
@@ -9,13 +9,15 @@ import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
 import { Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
-import { MAX_BPM, TransportControls } from "@/components/TransportControls";
+import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
 import { ChordDisplay } from "@/components/ChordDisplay";
 import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
 
 type Mode = "drill" | "patterns";
+
+const clampBpm = (bpm: number) => Math.max(MIN_BPM, Math.min(MAX_BPM, bpm));
 
 export default function Home() {
 	const [mode, setMode] = usePersistentState<Mode>("mode", "drill");
@@ -74,6 +76,8 @@ export default function Home() {
 		onTick: mode === "drill" ? drill.onTick : pattern.onTick,
 	});
 
+	const running = metronome.running;
+
 	// Stop the transport when switching modes so the engines don't overlap.
 	const { stop } = metronome;
 	useEffect(() => {
@@ -90,52 +94,118 @@ export default function Home() {
 		void metronome.start();
 	};
 
-	const showNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
+	// Keyboard shortcuts: Space = start/stop, ↑/↓ = tempo, F = fullscreen.
+	const mainRef = useRef<HTMLElement>(null);
+	const toggleRef = useRef(handleToggle);
+	useEffect(() => {
+		toggleRef.current = handleToggle;
+	});
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			const tag = (e.target as HTMLElement | null)?.tagName;
+			if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+			if (e.code === "Space") {
+				e.preventDefault();
+				toggleRef.current();
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				setBpm((b) => clampBpm(b + (e.shiftKey ? 5 : 1)));
+			} else if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setBpm((b) => clampBpm(b - (e.shiftKey ? 5 : 1)));
+			} else if (e.key === "f" || e.key === "F") {
+				if (document.fullscreenElement) void document.exitFullscreen();
+				else void mainRef.current?.requestFullscreen?.();
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [setBpm]);
+
+	const countdown = metronome.counting ? beatsPerBar - metronome.beat : null;
+
+	// Hero content per mode.
 	const activeChord = pattern.chords[pattern.activeIndex];
+	const drillShowNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
+	let patternBar = 0;
+	pattern.bars.forEach((b, i) => {
+		if (pattern.activeIndex >= b.startIndex) patternBar = i;
+	});
+
+	const hero =
+		mode === "drill" ? (
+			<ChordDisplay
+				symbol={drill.current?.symbol ?? null}
+				nextSymbol={drill.next?.symbol}
+				showNext={drillShowNext}
+				countdown={countdown}
+				focused={running}
+			/>
+		) : (
+			<div className="flex flex-col items-center gap-3">
+				<ChordDisplay
+					symbol={activeChord?.symbol ?? null}
+					nextSymbol={pattern.chords[(pattern.activeIndex + 1) % (pattern.chords.length || 1)]?.symbol}
+					showNext
+					countdown={countdown}
+					focused={running}
+				/>
+				<div className="font-mono text-xs uppercase tracking-[0.25em] text-muted">
+					key of {pattern.tonic} · bar {patternBar + 1}/{pattern.bars.length}
+				</div>
+			</div>
+		);
 
 	return (
-		<main className="flex flex-1 flex-col items-center gap-8 px-4 py-8">
-			<header className="text-center">
-				<h1 className="text-2xl font-semibold tracking-tight">Chord Thrower</h1>
-				<p className="mt-1 text-sm text-foreground/60">Drill chords and jazz patterns in time.</p>
-			</header>
+		<main ref={mainRef} className="flex flex-1 flex-col items-center gap-8 bg-background px-4 py-8">
+			{!running && (
+				<header className="text-center">
+					<h1 className="font-display text-3xl font-extrabold tracking-tight">Chord Thrower</h1>
+					<p className="mt-1 text-sm text-muted">Drill chords and jazz patterns in time.</p>
+				</header>
+			)}
 
-			<nav className="inline-flex rounded-full border border-foreground/15 p-1">
-				<TabButton active={mode === "drill"} onClick={() => setMode("drill")}>
-					Drill
-				</TabButton>
-				<TabButton active={mode === "patterns"} onClick={() => setMode("patterns")}>
-					Patterns
-				</TabButton>
-			</nav>
+			{!running && (
+				<nav className="inline-flex rounded-full border border-white/10 bg-surface/50 p-1">
+					<TabButton active={mode === "drill"} onClick={() => setMode("drill")}>
+						Drill
+					</TabButton>
+					<TabButton active={mode === "patterns"} onClick={() => setMode("patterns")}>
+						Patterns
+					</TabButton>
+				</nav>
+			)}
 
-			{mode === "drill" ? (
-				<>
-					<ChordDisplay
-						symbol={drill.current?.symbol ?? null}
-						nextSymbol={drill.next?.symbol}
-						showNext={showNext}
-					/>
-					<TransportControls
-						running={metronome.running}
-						onToggle={handleToggle}
-						bpm={bpm}
-						onBpmChange={setBpm}
-						beatsPerBar={beatsPerBar}
-						onBeatsPerBarChange={setBeatsPerBar}
-						muted={muted}
-						onMutedChange={setMuted}
-						audioEnabled={audioEnabled}
-						onAudioEnabledChange={setAudioEnabled}
-						countIn={countIn}
-						onCountInChange={setCountIn}
-						clickVolume={clickVolume}
-						onClickVolumeChange={setClickVolume}
-						chordVolume={chordVolume}
-						onChordVolumeChange={setChordVolume}
-						beat={metronome.beat}
-						counting={metronome.counting}
-					/>
+			{hero}
+
+			{mode === "patterns" && !running && (
+				<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} />
+			)}
+
+			<TransportControls
+				running={running}
+				onToggle={handleToggle}
+				bpm={bpm}
+				onBpmChange={setBpm}
+				beatsPerBar={beatsPerBar}
+				onBeatsPerBarChange={setBeatsPerBar}
+				muted={muted}
+				onMutedChange={setMuted}
+				audioEnabled={audioEnabled}
+				onAudioEnabledChange={setAudioEnabled}
+				countIn={countIn}
+				onCountInChange={setCountIn}
+				clickVolume={clickVolume}
+				onClickVolumeChange={setClickVolume}
+				chordVolume={chordVolume}
+				onChordVolumeChange={setChordVolume}
+				beat={metronome.beat}
+				counting={metronome.counting}
+				compact={running}
+			/>
+
+			{!running &&
+				(mode === "drill" ? (
 					<DrillControls
 						level={level}
 						onLevelChange={setLevel}
@@ -148,36 +218,7 @@ export default function Home() {
 						nextPreview={nextPreview}
 						onNextPreviewChange={setNextPreview}
 					/>
-				</>
-			) : (
-				<>
-					<div className="flex flex-col items-center gap-1">
-						<div className="text-6xl font-bold tracking-tight sm:text-7xl">
-							{activeChord?.symbol ?? "—"}
-						</div>
-						<div className="text-sm text-foreground/45">key of {pattern.tonic}</div>
-					</div>
-					<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} />
-					<TransportControls
-						running={metronome.running}
-						onToggle={handleToggle}
-						bpm={bpm}
-						onBpmChange={setBpm}
-						beatsPerBar={beatsPerBar}
-						onBeatsPerBarChange={setBeatsPerBar}
-						muted={muted}
-						onMutedChange={setMuted}
-						audioEnabled={audioEnabled}
-						onAudioEnabledChange={setAudioEnabled}
-						countIn={countIn}
-						onCountInChange={setCountIn}
-						clickVolume={clickVolume}
-						onClickVolumeChange={setClickVolume}
-						chordVolume={chordVolume}
-						onChordVolumeChange={setChordVolume}
-						beat={metronome.beat}
-						counting={metronome.counting}
-					/>
+				) : (
 					<PatternControls
 						progressionId={progressionId}
 						onProgressionChange={setProgressionId}
@@ -190,7 +231,12 @@ export default function Home() {
 						rampStep={rampStep}
 						onRampStepChange={setRampStep}
 					/>
-				</>
+				))}
+
+			{!running && (
+				<p className="text-xs text-muted/70">
+					Space start/stop · ↑↓ tempo · F fullscreen
+				</p>
 			)}
 		</main>
 	);
@@ -210,7 +256,7 @@ function TabButton({
 			type="button"
 			onClick={onClick}
 			className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-				active ? "bg-foreground text-background" : "text-foreground/60 hover:text-foreground"
+				active ? "bg-accent text-black" : "text-muted hover:text-foreground"
 			}`}
 		>
 			{children}

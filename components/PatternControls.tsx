@@ -31,12 +31,12 @@ export function PatternControls({
 	onRampStepChange: (step: number) => void;
 }) {
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-foreground/10 p-5">
+		<div className="flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-white/10 bg-surface/50 p-5">
 			<Field label="Pattern">
 				<select
 					value={progressionId}
 					onChange={(e) => onProgressionChange(e.target.value)}
-					className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+					className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 				>
 					{([1, 2, 3, 4] as Level[]).map((level) => (
 						<optgroup key={level} label={`Level ${level} — ${TIERS[level].name}`}>
@@ -55,7 +55,7 @@ export function PatternControls({
 					<select
 						value={keyCycle}
 						onChange={(e) => onKeyCycleChange(e.target.value as KeyCycle)}
-						className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
 						<option value="lock">Stay in one key</option>
 						<option value="cycle4">Cycle 4ths each rep</option>
@@ -67,7 +67,7 @@ export function PatternControls({
 					<select
 						value={instrument}
 						onChange={(e) => onInstrumentChange(e.target.value as Instrument)}
-						className="w-full rounded-lg border border-foreground/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
 						{INSTRUMENTS.map((inst) => (
 							<option key={inst.id} value={inst.id}>
@@ -79,22 +79,22 @@ export function PatternControls({
 			</div>
 
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<label className="flex items-center gap-2 text-sm text-foreground/70">
+				<label className="flex items-center gap-2 text-sm text-muted">
 					<input
 						type="checkbox"
 						checked={tempoRamp}
 						onChange={(e) => onTempoRampChange(e.target.checked)}
-						className="h-4 w-4 accent-foreground"
+						className="h-4 w-4 accent-accent"
 					/>
 					Ramp tempo each rep
 				</label>
 				<div className="inline-flex items-center gap-2">
-					<span className="text-sm text-foreground/50">+</span>
+					<span className="text-sm text-muted">+</span>
 					<select
 						value={rampStep}
 						onChange={(e) => onRampStepChange(Number(e.target.value))}
 						disabled={!tempoRamp}
-						className="rounded-lg border border-foreground/15 bg-background px-2 py-1 text-sm disabled:opacity-40"
+						className="rounded-lg border border-white/15 bg-background px-2 py-1 text-sm disabled:opacity-40"
 					>
 						{RAMP_STEPS.map((s) => (
 							<option key={s} value={s}>
@@ -102,7 +102,7 @@ export function PatternControls({
 							</option>
 						))}
 					</select>
-					<span className="text-sm text-foreground/50">bpm</span>
+					<span className="text-sm text-muted">bpm</span>
 				</div>
 			</div>
 		</div>
@@ -112,7 +112,7 @@ export function PatternControls({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<label className="flex flex-col gap-1.5">
-			<span className="text-sm text-foreground/60">{label}</span>
+			<span className="text-sm text-muted">{label}</span>
 			{children}
 		</label>
 	);

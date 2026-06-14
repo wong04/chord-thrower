@@ -11,22 +11,20 @@ export function MetronomeIndicator({
 	counting: boolean;
 }) {
 	return (
-		<div className="flex items-center gap-2" aria-hidden>
+		<div className="flex items-center gap-2.5" aria-hidden>
 			{Array.from({ length: beatsPerBar }, (_, i) => {
 				const active = i === beat;
 				const isDownbeat = i === 0;
+				let cls = "bg-foreground/15";
+				if (active) {
+					if (counting) cls = "scale-150 bg-accent";
+					else if (isDownbeat) cls = "scale-150 bg-accent shadow-[0_0_16px_var(--accent)]";
+					else cls = "scale-125 bg-foreground";
+				}
 				return (
 					<span
 						key={i}
-						className={`h-3 w-3 rounded-full transition-all duration-75 ${
-							active
-								? counting
-									? "scale-125 bg-amber-400"
-									: isDownbeat
-										? "scale-125 bg-foreground"
-										: "scale-110 bg-foreground/70"
-								: "bg-foreground/15"
-						}`}
+						className={`h-3.5 w-3.5 rounded-full transition-all duration-75 ${cls}`}
 					/>
 				);
 			})}

@@ -14,7 +14,7 @@ export function PatternChart({
 			{bars.map((bar, barIdx) => (
 				<div
 					key={barIdx}
-					className="flex min-h-16 items-stretch gap-1 rounded-xl border border-foreground/10 p-1"
+					className="flex min-h-16 items-stretch gap-1 rounded-xl border border-white/10 bg-surface/40 p-1"
 				>
 					{bar.chords.map((chord, i) => {
 						const globalIndex = bar.startIndex + i;
@@ -22,8 +22,8 @@ export function PatternChart({
 						return (
 							<div
 								key={i}
-								className={`flex flex-1 items-center justify-center rounded-lg px-1 text-center text-sm font-semibold transition-colors ${
-									active ? "bg-foreground text-background" : "text-foreground/75"
+								className={`flex flex-1 items-center justify-center rounded-lg px-1 text-center font-mono text-sm font-medium transition-colors ${
+									active ? "bg-accent text-black" : "text-foreground/75"
 								}`}
 							>
 								{chord.symbol}

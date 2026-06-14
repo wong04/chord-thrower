@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { MetronomeIndicator } from "./MetronomeIndicator";
 
 export const TIME_SIGNATURES: { label: string; beatsPerBar: number }[] = [
@@ -12,26 +13,9 @@ export const TIME_SIGNATURES: { label: string; beatsPerBar: number }[] = [
 export const MIN_BPM = 30;
 export const MAX_BPM = 300;
 
-export function TransportControls({
-	running,
-	onToggle,
-	bpm,
-	onBpmChange,
-	beatsPerBar,
-	onBeatsPerBarChange,
-	muted,
-	onMutedChange,
-	audioEnabled,
-	onAudioEnabledChange,
-	countIn,
-	onCountInChange,
-	clickVolume,
-	onClickVolumeChange,
-	chordVolume,
-	onChordVolumeChange,
-	beat,
-	counting,
-}: {
+const clampBpm = (bpm: number) => Math.max(MIN_BPM, Math.min(MAX_BPM, bpm));
+
+export type TransportProps = {
 	running: boolean;
 	onToggle: () => void;
 	bpm: number;
@@ -50,103 +34,187 @@ export function TransportControls({
 	onChordVolumeChange: (volume: number) => void;
 	beat: number;
 	counting: boolean;
-}) {
-	return (
-		<div className="flex w-full max-w-xl flex-col gap-5 rounded-2xl border border-foreground/10 p-5">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<button
-					type="button"
-					onClick={onToggle}
-					className={`rounded-full px-6 py-2 text-sm font-semibold transition-colors ${
-						running
-							? "bg-foreground/10 text-foreground hover:bg-foreground/15"
-							: "bg-foreground text-background hover:opacity-90"
-					}`}
-				>
-					{running ? "Stop" : "Start"}
-				</button>
+	/** Slim bar for focus mode. */
+	compact?: boolean;
+};
+
+export function TransportControls(props: TransportProps) {
+	const { running, onToggle, bpm, onBpmChange, beatsPerBar, beat, counting, compact } = props;
+
+	const tapsRef = useRef<number[]>([]);
+	const onTap = () => {
+		const now = performance.now();
+		const taps = tapsRef.current;
+		// Reset if the last tap was a long time ago (new tempo).
+		if (taps.length && now - taps[taps.length - 1] > 2000) taps.length = 0;
+		taps.push(now);
+		if (taps.length > 4) taps.shift();
+		if (taps.length >= 2) {
+			const intervals = taps.slice(1).map((t, i) => t - taps[i]);
+			const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+			onBpmChange(clampBpm(Math.round(60000 / avg)));
+		}
+	};
+
+	const startStop = (
+		<button
+			type="button"
+			onClick={onToggle}
+			className={`rounded-full px-7 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
+				running
+					? "bg-surface text-foreground hover:bg-white/10"
+					: "bg-accent text-black hover:brightness-110"
+			}`}
+		>
+			{running ? "Stop" : "▸ Start"}
+		</button>
+	);
+
+	if (compact) {
+		return (
+			<div className="flex w-full max-w-xl flex-wrap items-center justify-between gap-4 rounded-full border border-white/10 bg-surface/60 px-5 py-3 backdrop-blur">
+				{startStop}
 				<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
+				<div className="flex items-baseline gap-1.5">
+					<span className="font-mono text-2xl tabular-nums">{bpm}</span>
+					<span className="text-xs uppercase tracking-widest text-muted">bpm</span>
+				</div>
 				<div className="flex items-center gap-2">
+					<IconToggle
+						on={props.audioEnabled}
+						onClick={() => props.onAudioEnabledChange(!props.audioEnabled)}
+						label="🎹"
+						title="Chord sounds"
+					/>
+					<IconToggle
+						on={!props.muted}
+						onClick={() => props.onMutedChange(!props.muted)}
+						label={props.muted ? "🔇" : "🔊"}
+						title="Metronome click"
+					/>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex w-full max-w-xl flex-col gap-6 rounded-3xl border border-white/10 bg-surface/50 p-6">
+			{/* BPM hero */}
+			<div className="flex flex-wrap items-end justify-between gap-4">
+				<div className="flex items-baseline gap-2">
+					<span className="font-mono text-6xl leading-none tabular-nums">{bpm}</span>
+					<span className="text-sm uppercase tracking-[0.2em] text-muted">bpm</span>
+				</div>
+				<div className="flex items-center gap-3">
+					<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
 					<button
 						type="button"
-						onClick={() => onAudioEnabledChange(!audioEnabled)}
-						aria-pressed={audioEnabled}
-						className={`rounded-full border px-3 py-2 text-sm transition-colors ${
-							audioEnabled
-								? "border-foreground/30 text-foreground"
-								: "border-foreground/15 text-foreground/50 hover:text-foreground"
-						}`}
-						title={audioEnabled ? "Mute chord sounds" : "Play chord sounds"}
+						onClick={onTap}
+						className="rounded-full border border-white/15 px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
 					>
-						🎹 Chords
-					</button>
-					<button
-						type="button"
-						onClick={() => onMutedChange(!muted)}
-						aria-pressed={muted}
-						className="rounded-full border border-foreground/15 px-3 py-2 text-sm text-foreground/70 hover:text-foreground"
-						title={muted ? "Unmute metronome" : "Mute metronome"}
-					>
-						{muted ? "🔇 Click" : "🔊 Click"}
+						Tap
 					</button>
 				</div>
 			</div>
 
-			<div className="flex items-center gap-3">
-				<label className="w-24 shrink-0 text-sm text-foreground/60" htmlFor="tempo">
-					Tempo
-				</label>
-				<input
-					id="tempo"
-					type="range"
-					min={MIN_BPM}
-					max={MAX_BPM}
-					value={bpm}
-					onChange={(e) => onBpmChange(Number(e.target.value))}
-					className="flex-1 accent-foreground"
-				/>
-				<span className="w-16 text-right text-sm tabular-nums text-foreground/80">{bpm} bpm</span>
+			<input
+				type="range"
+				min={MIN_BPM}
+				max={MAX_BPM}
+				value={bpm}
+				onChange={(e) => onBpmChange(Number(e.target.value))}
+				aria-label="Tempo"
+				className="w-full accent-accent"
+			/>
+
+			{/* Primary action + sound toggles */}
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				{startStop}
+				<div className="flex items-center gap-2">
+					<IconToggle
+						on={props.audioEnabled}
+						onClick={() => props.onAudioEnabledChange(!props.audioEnabled)}
+						label="🎹 Chords"
+						title="Play chord sounds"
+					/>
+					<IconToggle
+						on={!props.muted}
+						onClick={() => props.onMutedChange(!props.muted)}
+						label={props.muted ? "🔇 Click" : "🔊 Click"}
+						title="Metronome click"
+					/>
+				</div>
 			</div>
 
+			{/* Levels */}
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-				<VolumeSlider label="🔊 Click" value={clickVolume} onChange={onClickVolumeChange} />
+				<VolumeSlider label="🔊 Click" value={props.clickVolume} onChange={props.onClickVolumeChange} />
 				<VolumeSlider
 					label="🎹 Chords"
-					value={chordVolume}
-					onChange={onChordVolumeChange}
-					disabled={!audioEnabled}
+					value={props.chordVolume}
+					onChange={props.onChordVolumeChange}
+					disabled={!props.audioEnabled}
 				/>
 			</div>
 
+			{/* Meter + count-in */}
 			<div className="flex flex-wrap items-center gap-3">
-				<span className="w-24 shrink-0 text-sm text-foreground/60">Time</span>
-				<div className="inline-flex rounded-full border border-foreground/15 p-0.5">
+				<span className="w-20 shrink-0 text-sm text-muted">Time</span>
+				<div className="inline-flex rounded-full border border-white/15 p-0.5">
 					{TIME_SIGNATURES.map((ts) => (
 						<button
 							key={ts.label}
 							type="button"
-							onClick={() => onBeatsPerBarChange(ts.beatsPerBar)}
+							onClick={() => props.onBeatsPerBarChange(ts.beatsPerBar)}
 							className={`rounded-full px-3 py-1 text-sm transition-colors ${
 								beatsPerBar === ts.beatsPerBar
-									? "bg-foreground text-background"
-									: "text-foreground/60 hover:text-foreground"
+									? "bg-accent text-black"
+									: "text-muted hover:text-foreground"
 							}`}
 						>
 							{ts.label}
 						</button>
 					))}
 				</div>
-				<label className="ml-auto flex items-center gap-2 text-sm text-foreground/70">
+				<label className="ml-auto flex items-center gap-2 text-sm text-muted">
 					<input
 						type="checkbox"
-						checked={countIn}
-						onChange={(e) => onCountInChange(e.target.checked)}
-						className="h-4 w-4 accent-foreground"
+						checked={props.countIn}
+						onChange={(e) => props.onCountInChange(e.target.checked)}
+						className="h-4 w-4 accent-accent"
 					/>
 					Count-in
 				</label>
 			</div>
 		</div>
+	);
+}
+
+function IconToggle({
+	on,
+	onClick,
+	label,
+	title,
+}: {
+	on: boolean;
+	onClick: () => void;
+	label: string;
+	title: string;
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			aria-pressed={on}
+			title={title}
+			className={`rounded-full border px-3 py-2 text-sm transition-colors ${
+				on
+					? "border-accent/60 text-foreground"
+					: "border-white/15 text-muted hover:text-foreground"
+			}`}
+		>
+			{label}
+		</button>
 	);
 }
 
@@ -163,7 +231,7 @@ function VolumeSlider({
 }) {
 	return (
 		<div className={`flex items-center gap-2 ${disabled ? "opacity-40" : ""}`}>
-			<span className="w-16 shrink-0 text-sm text-foreground/60">{label}</span>
+			<span className="w-16 shrink-0 text-sm text-muted">{label}</span>
 			<input
 				type="range"
 				min={0}
@@ -173,9 +241,9 @@ function VolumeSlider({
 				disabled={disabled}
 				onChange={(e) => onChange(Number(e.target.value))}
 				aria-label={`${label} volume`}
-				className="flex-1 accent-foreground"
+				className="flex-1 accent-accent"
 			/>
-			<span className="w-9 text-right text-sm tabular-nums text-foreground/80">
+			<span className="w-9 text-right font-mono text-sm tabular-nums text-foreground/80">
 				{Math.round(value * 100)}
 			</span>
 		</div>
