@@ -38,18 +38,22 @@ export function Keyboard({
 	const blackBg = (k: KeyClass) => keyBg(k, true);
 
 	return (
-		<div className="relative h-24 w-full max-w-xl select-none" aria-hidden>
-			{/* white keys */}
-			<div className="flex h-full w-full gap-px">
-				{WHITES.map((pc, i) => (
-					<div
-						key={i}
-						className={`flex-1 rounded-b-md border border-black/30 ${whiteBg(
-							classFor(pc, chord, scale),
-						)}`}
-					/>
-				))}
-			</div>
+		<div
+			className="w-full max-w-xl select-none rounded-xl border border-white/15 bg-neutral-950 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5"
+			aria-hidden
+		>
+			<div className="relative h-24 w-full overflow-hidden rounded-md">
+				{/* white keys */}
+				<div className="flex h-full w-full gap-px">
+					{WHITES.map((pc, i) => (
+						<div
+							key={i}
+							className={`flex-1 rounded-b-md border border-black/30 ${whiteBg(
+								classFor(pc, chord, scale),
+							)}`}
+						/>
+					))}
+				</div>
 			{/* black keys, positioned over white-key boundaries */}
 			{WHITES.map((pc, i) => {
 				if (i === WHITE_COUNT - 1) return null;
@@ -68,6 +72,7 @@ export function Keyboard({
 					/>
 				);
 			})}
+			</div>
 		</div>
 	);
 }
