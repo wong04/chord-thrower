@@ -6,6 +6,7 @@ import { Level, qualityPool, randomChord, TIERS } from "./chordPool";
 import { tonicChord } from "./keyHarmony";
 import { scaleForChord, chordTones } from "./scales";
 import { makeQuestion } from "../ear/earQuestion";
+import { bassNote } from "../audio/bassNote";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -144,6 +145,28 @@ describe("tonic chord (first chord on start)", () => {
 		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭");
 		expect(tonicChord("C", "minor", 2).symbol).toBe("Cm7");
 		expect(tonicChord("C", "minor", 2).roman).toBe("i7");
+	});
+});
+
+describe("walking bass", () => {
+	const C = { root: "C", quality: "maj7" as const, beatsPerBar: 4 };
+
+	it("roots mode plays root on 1 and fifth on 3", () => {
+		expect(bassNote({ mode: "roots", beat: 0, ...C })).toBe("C");
+		expect(bassNote({ mode: "roots", beat: 2, ...C })).toBe("G");
+		expect(bassNote({ mode: "roots", beat: 1, ...C })).toBeNull();
+	});
+
+	it("walking plays root, chord tones, then approaches the next root", () => {
+		expect(bassNote({ mode: "walking", beat: 0, ...C })).toBe("C");
+		expect(bassNote({ mode: "walking", beat: 1, ...C })).toBe("E"); // 3rd
+		expect(bassNote({ mode: "walking", beat: 2, ...C })).toBe("G"); // 5th
+		// last beat: half-step below the next root (F) → E
+		expect(bassNote({ mode: "walking", beat: 3, nextRoot: "F", ...C })).toBe("E");
+	});
+
+	it("off mode is silent", () => {
+		expect(bassNote({ mode: "off", beat: 0, ...C })).toBeNull();
 	});
 });
 

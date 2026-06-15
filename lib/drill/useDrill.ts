@@ -16,6 +16,14 @@ export type DrillSettings = {
 	barsPerChord: number;
 	/** Called when a chord starts sounding, with its audio-clock time. */
 	onChordChange?: (chord: Chord, time: number) => void;
+	/** Called every beat (for the bass), with the now-current chord. */
+	onBeat?: (
+		concertRoot: string,
+		quality: Chord["quality"],
+		nextConcertRoot: string | undefined,
+		beat: number,
+		time: number,
+	) => void;
 };
 
 export type DrillState = {
@@ -72,25 +80,32 @@ export function useDrill(settings: DrillSettings): DrillState {
 	}, [current, reset]);
 
 	const onTick = useCallback((tick: Tick) => {
-		if (tick.counting || tick.beat !== 0) return;
+		if (tick.counting) return;
+		const settings = settingsRef.current;
 
-		// First downbeat: sound the chord already on screen.
-		if (tick.bar === 0) {
-			if (currentRef.current) settingsRef.current.onChordChange?.(currentRef.current, tick.time);
-			return;
+		if (tick.beat === 0) {
+			if (tick.bar === 0) {
+				// First downbeat: sound the chord already on screen.
+				if (currentRef.current) settings.onChordChange?.(currentRef.current, tick.time);
+			} else if (tick.bar % settings.barsPerChord === 0) {
+				const promoted = nextRef.current;
+				const upcoming = differentChord(settings, promoted);
+				currentRef.current = promoted;
+				nextRef.current = upcoming;
+				if (promoted) settings.onChordChange?.(promoted, tick.time);
+				// Defer the on-screen swap to land on the beat, not at look-ahead.
+				Tone.getDraw().schedule(() => {
+					setCurrent(promoted);
+					setNext(upcoming);
+				}, tick.time);
+			}
 		}
-		if (tick.bar % settingsRef.current.barsPerChord !== 0) return;
 
-		const promoted = nextRef.current;
-		const upcoming = differentChord(settingsRef.current, promoted);
-		currentRef.current = promoted;
-		nextRef.current = upcoming;
-		if (promoted) settingsRef.current.onChordChange?.(promoted, tick.time);
-		// Defer the on-screen swap to land on the beat, not at look-ahead.
-		Tone.getDraw().schedule(() => {
-			setCurrent(promoted);
-			setNext(upcoming);
-		}, tick.time);
+		// Bass: every beat, follow the now-current chord.
+		const cur = currentRef.current;
+		if (cur) {
+			settings.onBeat?.(cur.concertRoot, cur.quality, nextRef.current?.concertRoot, tick.beat, tick.time);
+		}
 	}, []);
 
 	return { current, next, onTick, reset };

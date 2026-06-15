@@ -1,6 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Subdivision } from "@/lib/audio/metronome";
+import { BassMode } from "@/lib/audio/bass";
+import { Voicing } from "@/lib/audio/chordPlayer";
 import { MetronomeIndicator } from "./MetronomeIndicator";
 
 export const TIME_SIGNATURES: { label: string; beatsPerBar: number }[] = [
@@ -36,6 +39,16 @@ export type TransportProps = {
 	counting: boolean;
 	/** True while the chord-audio samples are still loading. */
 	chordsLoading?: boolean;
+	subdivision: Subdivision;
+	onSubdivisionChange: (value: Subdivision) => void;
+	backbeat: boolean;
+	onBackbeatChange: (value: boolean) => void;
+	bassMode: BassMode;
+	onBassModeChange: (value: BassMode) => void;
+	bassVolume: number;
+	onBassVolumeChange: (value: number) => void;
+	voicing: Voicing;
+	onVoicingChange: (value: Voicing) => void;
 	/** Slim bar for focus mode. */
 	compact?: boolean;
 };
@@ -170,6 +183,55 @@ export function TransportControls(props: TransportProps) {
 				/>
 			</div>
 
+			{/* Backing & feel */}
+			<div className="flex flex-col gap-3 rounded-xl border border-white/10 p-3">
+				<Row label="Bass">
+					<Segmented
+						value={props.bassMode}
+						onChange={props.onBassModeChange}
+						options={[
+							["off", "Off"],
+							["roots", "Roots"],
+							["walking", "Walking"],
+						]}
+					/>
+				</Row>
+				{props.bassMode !== "off" && (
+					<VolumeSlider label="🎸 Bass" value={props.bassVolume} onChange={props.onBassVolumeChange} />
+				)}
+				<Row label="Ride">
+					<Segmented
+						value={props.subdivision}
+						onChange={props.onSubdivisionChange}
+						options={[
+							["none", "Off"],
+							["straight", "8ths"],
+							["swing", "Swing"],
+						]}
+					/>
+				</Row>
+				<Row label="Voicing">
+					<Segmented
+						value={props.voicing}
+						onChange={props.onVoicingChange}
+						options={[
+							["block", "Block"],
+							["shell", "Shell"],
+							["rootless", "Rootless"],
+						]}
+					/>
+				</Row>
+				<label className="flex items-center gap-2 text-sm text-muted">
+					<input
+						type="checkbox"
+						checked={props.backbeat}
+						onChange={(e) => props.onBackbeatChange(e.target.checked)}
+						className="h-4 w-4 accent-accent"
+					/>
+					Click on 2 &amp; 4 (4/4)
+				</label>
+			</div>
+
 			{/* Meter + count-in */}
 			<div className="flex flex-wrap items-center gap-3">
 				<span className="w-20 shrink-0 text-sm text-muted">Time</span>
@@ -245,6 +307,42 @@ function BpmInput({
 			aria-label="Tempo in BPM"
 			className={className}
 		/>
+	);
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+	return (
+		<div className="flex items-center justify-between gap-3">
+			<span className="text-sm text-muted">{label}</span>
+			{children}
+		</div>
+	);
+}
+
+function Segmented<T extends string>({
+	value,
+	onChange,
+	options,
+}: {
+	value: T;
+	onChange: (value: T) => void;
+	options: [T, string][];
+}) {
+	return (
+		<div className="inline-flex rounded-full border border-white/15 p-0.5">
+			{options.map(([val, label]) => (
+				<button
+					key={val}
+					type="button"
+					onClick={() => onChange(val)}
+					className={`rounded-full px-3 py-1 text-sm transition-colors ${
+						value === val ? "bg-accent text-black" : "text-muted hover:text-foreground"
+					}`}
+				>
+					{label}
+				</button>
+			))}
+		</div>
 	);
 }
 

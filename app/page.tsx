@@ -4,7 +4,11 @@ import { useEffect, useRef } from "react";
 import { usePersistentState } from "@/lib/storage/usePersistentState";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useChordPlayer } from "@/lib/audio/useChordPlayer";
+import { useBass } from "@/lib/audio/useBass";
 import { useWakeLock } from "@/lib/audio/useWakeLock";
+import { bassNote, BassMode } from "@/lib/audio/bass";
+import { Subdivision } from "@/lib/audio/metronome";
+import { Voicing } from "@/lib/audio/chordPlayer";
 import { useDrill } from "@/lib/drill/useDrill";
 import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
@@ -37,6 +41,11 @@ export default function Home() {
 	const [instrument, setInstrument] = usePersistentState<Instrument>("instrument", "C");
 	const [clickVolume, setClickVolume] = usePersistentState("clickVolume", 0.8);
 	const [chordVolume, setChordVolume] = usePersistentState("chordVolume", 0.8);
+	const [subdivision, setSubdivision] = usePersistentState<Subdivision>("subdivision", "none");
+	const [backbeat, setBackbeat] = usePersistentState("backbeat", false);
+	const [bassMode, setBassMode] = usePersistentState<BassMode>("bassMode", "off");
+	const [bassVolume, setBassVolume] = usePersistentState("bassVolume", 0.85);
+	const [voicing, setVoicing] = usePersistentState<Voicing>("voicing", "block");
 
 	// Drill settings
 	const [level, setLevel] = usePersistentState<Level>("level", 1);
@@ -57,8 +66,27 @@ export default function Home() {
 	// Ear-training settings
 	const [earMode, setEarMode] = usePersistentState<EarMode>("earMode", "quality");
 
-	const { play: playChord, ready: chordsReady } = useChordPlayer(audioEnabled, chordVolume);
+	const { play: playChord, ready: chordsReady } = useChordPlayer(audioEnabled, chordVolume, voicing);
+	const playBass = useBass(bassMode !== "off", bassVolume);
 	const secondsPerBeat = 60 / bpm;
+
+	const onBeat = (
+		concertRoot: string,
+		quality: Parameters<typeof bassNote>[0]["quality"],
+		nextConcertRoot: string | undefined,
+		beat: number,
+		time: number,
+	) => {
+		const note = bassNote({
+			mode: bassMode,
+			root: concertRoot,
+			quality,
+			beat,
+			beatsPerBar,
+			nextRoot: nextConcertRoot,
+		});
+		if (note) playBass(note, time, secondsPerBeat);
+	};
 
 	const drill = useDrill({
 		level,
@@ -68,6 +96,7 @@ export default function Home() {
 		barsPerChord,
 		onChordChange: (chord, time) =>
 			playChord(chord.concertRoot, chord.quality, time, barsPerChord * beatsPerBar * secondsPerBeat),
+		onBeat,
 	});
 	const pattern = usePattern({
 		progression,
@@ -78,6 +107,7 @@ export default function Home() {
 		},
 		onChordChange: (chord, time) =>
 			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
+		onBeat,
 	});
 
 	const ear = useEarTrainer({
@@ -94,6 +124,8 @@ export default function Home() {
 		countInBars: countIn ? 1 : 0,
 		muted,
 		clickVolume,
+		subdivision,
+		backbeat,
 		onTick: mode === "drill" ? drill.onTick : mode === "patterns" ? pattern.onTick : undefined,
 	});
 
@@ -255,6 +287,16 @@ export default function Home() {
 				beat={metronome.beat}
 				counting={metronome.counting}
 				chordsLoading={audioEnabled && !chordsReady}
+					subdivision={subdivision}
+					onSubdivisionChange={setSubdivision}
+					backbeat={backbeat}
+					onBackbeatChange={setBackbeat}
+					bassMode={bassMode}
+					onBassModeChange={setBassMode}
+					bassVolume={bassVolume}
+					onBassVolumeChange={setBassVolume}
+					voicing={voicing}
+					onVoicingChange={setVoicing}
 					compact={running}
 			/>
 

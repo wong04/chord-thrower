@@ -14,6 +14,10 @@ export type Tick = {
 const ACCENT_PITCH = "C6";
 const BEAT_PITCH = "C5";
 const COUNT_PITCH = "G5";
+const RIDE_PITCH = "G5";
+
+/** Off-beat feel: no offbeats / straight 8ths / swung 8ths (ride). */
+export type Subdivision = "none" | "straight" | "swing";
 
 /**
  * Single source of musical time, built on Tone.Transport. Emits a tick on every
@@ -24,13 +28,28 @@ export class Metronome {
 	private transport = Tone.getTransport();
 	private synth: Tone.Synth | null = null;
 	private repeatId: number | null = null;
+	private subRepeatId: number | null = null;
 	private tickIndex = 0;
+	private subTick = 0;
+	private inCountIn = false;
 
 	beatsPerBar = 4;
 	countInBars = 0;
 	muted = false;
 	accent = true;
+	/** Click only on beats 2 & 4 (jazz backbeat) instead of accenting beat 1. */
+	backbeat = false;
 	onTick: ((tick: Tick) => void) | null = null;
+
+	private _subdivision: Subdivision = "none";
+	get subdivision(): Subdivision {
+		return this._subdivision;
+	}
+	set subdivision(value: Subdivision) {
+		this._subdivision = value;
+		this.transport.swingSubdivision = "8n";
+		this.transport.swing = value === "swing" ? 0.6 : 0;
+	}
 
 	private _clickVolume = 0.8;
 	/** Click level as linear gain (0–1). */
@@ -66,19 +85,25 @@ export class Metronome {
 
 	start(): void {
 		this.tickIndex = 0;
+		this.subTick = 0;
 		if (this.repeatId === null) {
 			this.repeatId = this.transport.scheduleRepeat((time) => this.fire(time), "4n");
+		}
+		if (this.subRepeatId === null) {
+			this.subRepeatId = this.transport.scheduleRepeat((time) => this.fireSub(time), "8n");
 		}
 		this.transport.start();
 	}
 
 	stop(): void {
 		this.transport.stop();
-		if (this.repeatId !== null) {
-			this.transport.clear(this.repeatId);
-			this.repeatId = null;
+		for (const id of [this.repeatId, this.subRepeatId]) {
+			if (id !== null) this.transport.clear(id);
 		}
+		this.repeatId = null;
+		this.subRepeatId = null;
 		this.tickIndex = 0;
+		this.subTick = 0;
 	}
 
 	dispose(): void {
@@ -94,9 +119,17 @@ export class Metronome {
 		const beat = ((musicalTick % this.beatsPerBar) + this.beatsPerBar) % this.beatsPerBar;
 		const bar = Math.floor(musicalTick / this.beatsPerBar);
 
-		if (!this.muted) {
-			const pitch = counting ? COUNT_PITCH : beat === 0 && this.accent ? ACCENT_PITCH : BEAT_PITCH;
-			const velocity = beat === 0 && !counting && this.accent ? 1 : 0.7;
+		this.inCountIn = counting;
+
+		// Backbeat: click only on beats 2 & 4 (skip during count-in).
+		const backbeatBeat = beat === 1 || beat === 3;
+		const shouldClick =
+			!this.muted && (counting || !this.backbeat || (this.beatsPerBar === 4 && backbeatBeat));
+
+		if (shouldClick) {
+			const accented = beat === 0 && !counting && this.accent && !this.backbeat;
+			const pitch = counting ? COUNT_PITCH : accented ? ACCENT_PITCH : BEAT_PITCH;
+			const velocity = accented ? 1 : 0.7;
 			this.getSynth().triggerAttackRelease(pitch, "32n", time, velocity);
 		}
 
@@ -105,5 +138,14 @@ export class Metronome {
 		const tick: Tick = { beat, bar, counting, time };
 		this.onTick?.(tick);
 		this.tickIndex++;
+	}
+
+	// Off-beat ride click (the "and"). The 8n repeat fires on both on- and off-beats;
+	// on-beats are handled by fire(), so only the odd (off-beat) ticks sound here.
+	// Transport swing shifts these later when subdivision === "swing".
+	private fireSub(time: number): void {
+		const isOffbeat = this.subTick++ % 2 === 1;
+		if (!isOffbeat || this._subdivision === "none" || this.muted || this.inCountIn) return;
+		this.getSynth().triggerAttackRelease(RIDE_PITCH, "32n", time, 0.32);
 	}
 }

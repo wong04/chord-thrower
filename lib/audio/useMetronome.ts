@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import { ensureAudioReady } from "./audioContext";
-import { Metronome, Tick } from "./metronome";
+import { Metronome, Subdivision, Tick } from "./metronome";
 
 export type MetronomeConfig = {
 	bpm: number;
@@ -12,6 +12,8 @@ export type MetronomeConfig = {
 	muted: boolean;
 	/** Click level as linear gain (0–1). */
 	clickVolume: number;
+	subdivision: Subdivision;
+	backbeat: boolean;
 	/** Engine hook called on every tick (sample-accurately, via Tone.Draw). */
 	onTick?: (tick: Tick) => void;
 };
@@ -67,12 +69,16 @@ export function useMetronome(config: MetronomeConfig): MetronomeControls {
 		m.countInBars = config.countInBars;
 		m.muted = config.muted;
 		m.clickVolume = config.clickVolume;
+		m.subdivision = config.subdivision;
+		m.backbeat = config.backbeat;
 	}, [
 		config.bpm,
 		config.beatsPerBar,
 		config.countInBars,
 		config.muted,
 		config.clickVolume,
+		config.subdivision,
+		config.backbeat,
 		getMetronome,
 	]);
 

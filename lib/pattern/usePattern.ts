@@ -17,6 +17,14 @@ export type PatternSettings = {
 	onRep?: () => void;
 	/** Called when a new chord starts sounding, with its audio-clock time. */
 	onChordChange?: (chord: ResolvedChord, time: number) => void;
+	/** Called every beat (for the bass), with the current chord. */
+	onBeat?: (
+		concertRoot: string,
+		quality: ResolvedChord["quality"],
+		nextConcertRoot: string | undefined,
+		beat: number,
+		time: number,
+	) => void;
 };
 
 export type Bar = { chords: ResolvedChord[]; startIndex: number };
@@ -81,6 +89,10 @@ export function usePattern(settings: PatternSettings): PatternState {
 	useEffect(() => {
 		onChordChangeRef.current = settings.onChordChange;
 	});
+	const onBeatRef = useRef(settings.onBeat);
+	useEffect(() => {
+		onBeatRef.current = settings.onBeat;
+	});
 
 	const [tonic, setTonic] = useState(progression.defaultTonic);
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -143,6 +155,15 @@ export function usePattern(settings: PatternSettings): PatternState {
 			const chord = chordsRef.current[idx];
 			if (chord) onChordChangeRef.current?.(chord, tick.time);
 		}
+
+		// Bass: every beat, follow the current chord and approach the next one.
+		const chords = chordsRef.current;
+		const cur = chords[idx];
+		if (cur) {
+			const nxt = chords[(idx + 1) % chords.length];
+			onBeatRef.current?.(cur.concertRoot, cur.quality, nxt?.concertRoot, tick.beat, tick.time);
+		}
+
 		// Defer the highlight move to land on the beat, not at look-ahead.
 		Tone.getDraw().schedule(() => setActiveIndex(idx), tick.time);
 

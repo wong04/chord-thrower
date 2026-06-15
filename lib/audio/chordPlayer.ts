@@ -2,13 +2,31 @@ import * as Tone from "tone";
 import { Chord, Note } from "tonal";
 import { QUALITIES, QualityId } from "@/lib/theory/qualities";
 
+export type Voicing = "block" | "shell" | "rootless";
+
+/** Pick which chord tones to sound for a voicing style. */
+function voiceTones(pitchClasses: string[], voicing: Voicing): string[] {
+	if (voicing === "shell" && pitchClasses.length >= 4) {
+		return [pitchClasses[0], pitchClasses[1], pitchClasses[3]]; // root, 3rd, 7th
+	}
+	if (voicing === "rootless" && pitchClasses.length >= 3) {
+		return pitchClasses.slice(1); // drop the root: 3-5-7-(9…)
+	}
+	return pitchClasses;
+}
+
 /**
  * Voice a chord as ascending frequencies starting around octave 3. Tonal returns
  * bare pitch classes, so we stack octaves to keep the voicing rising, then convert
  * to Hz (sidestepping Tone's note parser for spellings like E♯ or B𝄫).
  */
-function voicing(root: string, quality: QualityId, startOctave = 3): number[] {
-	const pitchClasses = Chord.getChord(QUALITIES[quality].chordType, root).notes;
+function voicing(
+	root: string,
+	quality: QualityId,
+	style: Voicing = "block",
+	startOctave = 3,
+): number[] {
+	const pitchClasses = voiceTones(Chord.getChord(QUALITIES[quality].chordType, root).notes, style);
 	const freqs: number[] = [];
 	let octave = startOctave;
 	let prevChroma = -1;
@@ -38,6 +56,7 @@ const SALAMANDER_URLS: Record<string, string> = {
 /** Plays voiced chords on a sampled grand piano. Used only when enabled. */
 export class ChordPlayer {
 	private sampler: Tone.Sampler;
+	voicing: Voicing = "block";
 
 	constructor(volume = 0.8, onReady?: () => void) {
 		// Construct eagerly so the samples start downloading right away (preload).
@@ -61,7 +80,7 @@ export class ChordPlayer {
 
 	play(root: string, quality: QualityId, time: number, durationSeconds: number): void {
 		if (!this.sampler.loaded) return; // samples not ready yet — skip silently
-		const freqs = voicing(root, quality);
+		const freqs = voicing(root, quality, this.voicing);
 		if (!freqs.length) return;
 		// Schedule exactly on the beat `time` (the click uses the same value). Only nudge
 		// forward if `time` is already in the past — compare against the raw audio clock,
