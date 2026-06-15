@@ -31,6 +31,7 @@ export class Metronome {
 	private tickIndex = 0;
 	private subTick = 0;
 	private inCountIn = false;
+	private currentBeat = 0;
 
 	beatsPerBar = 4;
 	countInBars = 0;
@@ -134,10 +135,13 @@ export class Metronome {
 			this.getSynth().triggerAttackRelease(pitch, "32n", time, velocity);
 		}
 
-		// Ride pulse on the beat (the "ding"), independent of the click mute/backbeat.
-		if (this._subdivision !== "none" && !counting) {
-			this.onRide?.(time, beat === 0 ? 1 : 0.7);
+		// Spang-a-lang: ride hits on beats 1 and 3 only (0-indexed: 0 and 2).
+		// The "and" hits (beat 2 and beat 4 in 1-based) come from fireSub().
+		if (this._subdivision !== "none" && !counting && (beat === 0 || beat === 2)) {
+			this.onRide?.(time, beat === 0 ? 1 : 0.8);
 		}
+		// Store beat so fireSub() knows which "and" it's playing on.
+		this.currentBeat = beat;
 
 		// Dispatch synchronously at look-ahead so consumers can schedule audio at the
 		// future `time`. Visual updates are deferred to Tone.Draw by the consumers.
@@ -149,9 +153,12 @@ export class Metronome {
 	// Off-beat ride hit (the "and"). The 8n repeat fires on both on- and off-beats;
 	// on-beats are handled by fire(), so only the odd (off-beat) ticks sound here.
 	// Transport swing shifts these later when subdivision === "swing".
+	// Spang-a-lang: only fire on the "and" of beats 2 and 4 (currentBeat 1 and 3).
 	private fireSub(time: number): void {
 		const isOffbeat = this.subTick++ % 2 === 1;
 		if (!isOffbeat || this._subdivision === "none" || this.inCountIn) return;
-		this.onRide?.(time, 0.5);
+		if (this.currentBeat === 1 || this.currentBeat === 3) {
+			this.onRide?.(time, 0.65);
+		}
 	}
 }

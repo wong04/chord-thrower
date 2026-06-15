@@ -73,14 +73,18 @@ export function TransportControls(props: TransportProps) {
 		}
 	};
 
+	const isLoading = !running && !!props.chordsLoading;
 	const startStop = (
 		<button
 			type="button"
 			onClick={onToggle}
+			disabled={isLoading}
 			className={`rounded-full px-7 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
 				running
 					? "bg-surface text-foreground hover:bg-white/10"
-					: "bg-accent text-black hover:brightness-110"
+					: isLoading
+						? "bg-accent/40 text-black/50 cursor-not-allowed"
+						: "bg-accent text-black hover:brightness-110"
 			}`}
 		>
 			{running ? "Stop" : "▸ Start"}
