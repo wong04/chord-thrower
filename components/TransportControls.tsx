@@ -47,6 +47,8 @@ export type TransportProps = {
 	onBassModeChange: (value: BassMode) => void;
 	bassVolume: number;
 	onBassVolumeChange: (value: number) => void;
+	rideVolume: number;
+	onRideVolumeChange: (value: number) => void;
 	voicing: Voicing;
 	onVoicingChange: (value: Voicing) => void;
 	/** Slim bar for focus mode. */
@@ -210,6 +212,9 @@ export function TransportControls(props: TransportProps) {
 						]}
 					/>
 				</Row>
+				{props.subdivision !== "none" && (
+					<VolumeSlider label="🥁 Ride" value={props.rideVolume} onChange={props.onRideVolumeChange} />
+				)}
 				<Row label="Voicing">
 					<Segmented
 						value={props.voicing}

@@ -4,8 +4,7 @@ import { Level, TIERS } from "@/lib/theory/chordPool";
 import { INSTRUMENTS, Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
 import { KeyCycle } from "@/lib/pattern/usePattern";
-
-const RAMP_STEPS = [2, 4, 6];
+import { TempoRamp } from "./TempoRamp";
 
 export function PatternControls({
 	progressionId,
@@ -78,33 +77,13 @@ export function PatternControls({
 				</Field>
 			</div>
 
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<label className="flex items-center gap-2 text-sm text-muted">
-					<input
-						type="checkbox"
-						checked={tempoRamp}
-						onChange={(e) => onTempoRampChange(e.target.checked)}
-						className="h-4 w-4 accent-accent"
-					/>
-					Ramp tempo each rep
-				</label>
-				<div className="inline-flex items-center gap-2">
-					<span className="text-sm text-muted">+</span>
-					<select
-						value={rampStep}
-						onChange={(e) => onRampStepChange(Number(e.target.value))}
-						disabled={!tempoRamp}
-						className="rounded-lg border border-white/15 bg-background px-2 py-1 text-sm disabled:opacity-40"
-					>
-						{RAMP_STEPS.map((s) => (
-							<option key={s} value={s}>
-								{s}
-							</option>
-						))}
-					</select>
-					<span className="text-sm text-muted">bpm</span>
-				</div>
-			</div>
+			<TempoRamp
+				label="Ramp tempo each rep"
+				tempoRamp={tempoRamp}
+				onTempoRampChange={onTempoRampChange}
+				rampStep={rampStep}
+				onRampStepChange={onRampStepChange}
+			/>
 		</div>
 	);
 }

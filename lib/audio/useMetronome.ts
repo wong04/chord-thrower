@@ -16,6 +16,8 @@ export type MetronomeConfig = {
 	backbeat: boolean;
 	/** Engine hook called on every tick (sample-accurately, via Tone.Draw). */
 	onTick?: (tick: Tick) => void;
+	/** Sampled ride hook, fired on the beat + swung offbeat at audio-rate. */
+	onRide?: (time: number, velocity: number) => void;
 };
 
 export type MetronomeControls = {
@@ -38,6 +40,10 @@ export function useMetronome(config: MetronomeConfig): MetronomeControls {
 	useEffect(() => {
 		onTickRef.current = config.onTick;
 	});
+	const onRideRef = useRef(config.onRide);
+	useEffect(() => {
+		onRideRef.current = config.onRide;
+	});
 
 	const [running, setRunning] = useState(false);
 	const [beat, setBeat] = useState(-1);
@@ -56,6 +62,7 @@ export function useMetronome(config: MetronomeConfig): MetronomeControls {
 					setCounting(tick.counting);
 				}, tick.time);
 			};
+			m.onRide = (time, velocity) => onRideRef.current?.(time, velocity);
 			metronomeRef.current = m;
 		}
 		return metronomeRef.current;

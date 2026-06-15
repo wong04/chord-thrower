@@ -38,7 +38,7 @@ const b = "♭"; // ♭
 const s = "♯"; // ♯
 
 export const QUALITIES: Record<QualityId, Quality> = {
-	maj: { id: "maj", symbol: "", chordType: "major" },
+	maj: { id: "maj", symbol: "Maj", chordType: "major" },
 	min: { id: "min", symbol: "m", chordType: "minor" },
 	dim: { id: "dim", symbol: "°", chordType: "diminished" },
 	aug: { id: "aug", symbol: "+", chordType: "augmented" },

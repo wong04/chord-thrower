@@ -17,8 +17,8 @@ function progById(id: string) {
 }
 
 describe("formatChord", () => {
-	it("renders major triads as the bare root", () => {
-		expect(formatChord("C", "maj")).toBe("C");
+	it("renders major triads with Maj suffix", () => {
+		expect(formatChord("C", "maj")).toBe("CMaj");
 	});
 	it("renders quality suffixes", () => {
 		expect(formatChord("C", "maj7")).toBe("Cmaj7");
@@ -105,14 +105,14 @@ describe("key-aware drill (diatonic + borrowed)", () => {
 		);
 
 	it("C major L1 stays within the diatonic triads", () => {
-		const allowed = new Set(["C", "Dm", "Em", "F", "G", "Am", "B°"]);
+		const allowed = new Set(["CMaj", "Dm", "Em", "FMaj", "GMaj", "Am", "B°"]);
 		for (const s of draws(1, "C", "major")) expect(allowed.has(s)).toBe(true);
 	});
 
 	it("C major L2 stays diatonic (triads + 7ths, cumulative)", () => {
 		const allowed = new Set([
 			// L1 triads
-			"C", "Dm", "Em", "F", "G", "Am", "B°",
+			"CMaj", "Dm", "Em", "FMaj", "GMaj", "Am", "B°",
 			// L2 sevenths
 			"Cmaj7", "Dm7", "Em7", "Fmaj7", "G7", "Am7", "Bm7♭5",
 		]);
@@ -122,7 +122,7 @@ describe("key-aware drill (diatonic + borrowed)", () => {
 	it("C minor L2 stays diatonic (triads + 7ths, cumulative)", () => {
 		const allowed = new Set([
 			// L1 triads
-			"Cm", "D°", "E♭", "Fm", "G", "A♭", "B♭",
+			"Cm", "D°", "E♭Maj", "Fm", "GMaj", "A♭Maj", "B♭Maj",
 			// L2 sevenths
 			"Cm7", "Dm7♭5", "E♭maj7", "Fm7", "G7", "A♭maj7", "B♭maj7",
 		]);
@@ -142,7 +142,7 @@ describe("tonic chord (first chord on start)", () => {
 	it("is the key's I chord at the current level", () => {
 		expect(tonicChord("Eb", "major", 2).symbol).toBe("E♭maj7");
 		expect(tonicChord("Eb", "major", 2).roman).toBe("Imaj7");
-		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭");
+		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭Maj");
 		expect(tonicChord("C", "minor", 2).symbol).toBe("Cm7");
 		expect(tonicChord("C", "minor", 2).roman).toBe("i7");
 	});

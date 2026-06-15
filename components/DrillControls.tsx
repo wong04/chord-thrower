@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Level, TIERS } from "@/lib/theory/chordPool";
 import { KEY_LEVEL_BLURB, Tonality } from "@/lib/theory/keyHarmony";
 import { INSTRUMENTS, Instrument, KEYS } from "@/lib/theory/transpose";
+import { TempoRamp } from "./TempoRamp";
 
 export type NextPreview = "auto" | "show" | "hide";
 
@@ -26,6 +27,10 @@ export function DrillControls({
 	onInstrumentChange,
 	nextPreview,
 	onNextPreviewChange,
+	tempoRamp,
+	onTempoRampChange,
+	rampStep,
+	onRampStepChange,
 }: {
 	level: Level;
 	onLevelChange: (level: Level) => void;
@@ -43,6 +48,10 @@ export function DrillControls({
 	onInstrumentChange: (instrument: Instrument) => void;
 	nextPreview: NextPreview;
 	onNextPreviewChange: (value: NextPreview) => void;
+	tempoRamp: boolean;
+	onTempoRampChange: (enabled: boolean) => void;
+	rampStep: number;
+	onRampStepChange: (step: number) => void;
 }) {
 	const keyMode = keyChoice !== "all";
 
@@ -172,6 +181,14 @@ export function DrillControls({
 				/>
 				Show scale &amp; keyboard
 			</label>
+
+			<TempoRamp
+				label="Ramp tempo each chord"
+				tempoRamp={tempoRamp}
+				onTempoRampChange={onTempoRampChange}
+				rampStep={rampStep}
+				onRampStepChange={onRampStepChange}
+			/>
 		</div>
 	);
 }

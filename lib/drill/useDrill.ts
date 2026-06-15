@@ -24,6 +24,8 @@ export type DrillSettings = {
 		beat: number,
 		time: number,
 	) => void;
+	/** Called when the drill advances to a new chord (for tempo ramp, etc.). */
+	onAdvance?: () => void;
 };
 
 export type DrillState = {
@@ -93,6 +95,7 @@ export function useDrill(settings: DrillSettings): DrillState {
 				currentRef.current = promoted;
 				nextRef.current = upcoming;
 				if (promoted) settings.onChordChange?.(promoted, tick.time);
+				settings.onAdvance?.();
 				// Defer the on-screen swap to land on the beat, not at look-ahead.
 				Tone.getDraw().schedule(() => {
 					setCurrent(promoted);

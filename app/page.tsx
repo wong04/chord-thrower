@@ -5,6 +5,7 @@ import { usePersistentState } from "@/lib/storage/usePersistentState";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useChordPlayer } from "@/lib/audio/useChordPlayer";
 import { useBass } from "@/lib/audio/useBass";
+import { useRide } from "@/lib/audio/useRide";
 import { useWakeLock } from "@/lib/audio/useWakeLock";
 import { bassNote, BassMode } from "@/lib/audio/bass";
 import { Subdivision } from "@/lib/audio/metronome";
@@ -45,6 +46,7 @@ export default function Home() {
 	const [backbeat, setBackbeat] = usePersistentState("backbeat", false);
 	const [bassMode, setBassMode] = usePersistentState<BassMode>("bassMode", "off");
 	const [bassVolume, setBassVolume] = usePersistentState("bassVolume", 0.85);
+	const [rideVolume, setRideVolume] = usePersistentState("rideVolume", 0.7);
 	const [voicing, setVoicing] = usePersistentState<Voicing>("voicing", "block");
 
 	// Drill settings
@@ -67,7 +69,8 @@ export default function Home() {
 	const [earMode, setEarMode] = usePersistentState<EarMode>("earMode", "quality");
 
 	const { play: playChord, ready: chordsReady } = useChordPlayer(audioEnabled, chordVolume, voicing);
-	const playBass = useBass(bassMode !== "off", bassVolume);
+	const { play: playBass, ready: bassReady } = useBass(bassMode !== "off", bassVolume);
+	const { play: playRide, ready: rideReady } = useRide(subdivision !== "none", rideVolume);
 	const secondsPerBeat = 60 / bpm;
 
 	const onBeat = (
@@ -97,6 +100,9 @@ export default function Home() {
 		onChordChange: (chord, time) =>
 			playChord(chord.concertRoot, chord.quality, time, barsPerChord * beatsPerBar * secondsPerBeat),
 		onBeat,
+		onAdvance: () => {
+			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
+		},
 	});
 	const pattern = usePattern({
 		progression,
@@ -127,6 +133,7 @@ export default function Home() {
 		subdivision,
 		backbeat,
 		onTick: mode === "drill" ? drill.onTick : mode === "patterns" ? pattern.onTick : undefined,
+		onRide: playRide,
 	});
 
 	const running = metronome.running;
@@ -286,7 +293,13 @@ export default function Home() {
 				onChordVolumeChange={setChordVolume}
 				beat={metronome.beat}
 				counting={metronome.counting}
-				chordsLoading={audioEnabled && !chordsReady}
+				chordsLoading={
+						(audioEnabled && !chordsReady) ||
+						(bassMode !== "off" && !bassReady) ||
+						(subdivision !== "none" && !rideReady)
+					}
+					rideVolume={rideVolume}
+					onRideVolumeChange={setRideVolume}
 					subdivision={subdivision}
 					onSubdivisionChange={setSubdivision}
 					backbeat={backbeat}
@@ -319,6 +332,10 @@ export default function Home() {
 						onInstrumentChange={setInstrument}
 						nextPreview={nextPreview}
 						onNextPreviewChange={setNextPreview}
+						tempoRamp={tempoRamp}
+						onTempoRampChange={setTempoRamp}
+						rampStep={rampStep}
+						onRampStepChange={setRampStep}
 					/>
 				) : (
 					<PatternControls

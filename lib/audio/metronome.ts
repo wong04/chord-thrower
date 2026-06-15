@@ -14,7 +14,6 @@ export type Tick = {
 const ACCENT_PITCH = "C6";
 const BEAT_PITCH = "C5";
 const COUNT_PITCH = "G5";
-const RIDE_PITCH = "G5";
 
 /** Off-beat feel: no offbeats / straight 8ths / swung 8ths (ride). */
 export type Subdivision = "none" | "straight" | "swing";
@@ -40,6 +39,8 @@ export class Metronome {
 	/** Click only on beats 2 & 4 (jazz backbeat) instead of accenting beat 1. */
 	backbeat = false;
 	onTick: ((tick: Tick) => void) | null = null;
+	/** Sampled ride cymbal; fired on the beat and the swung offbeat. Independent of the click. */
+	onRide: ((time: number, velocity: number) => void) | null = null;
 
 	private _subdivision: Subdivision = "none";
 	get subdivision(): Subdivision {
@@ -133,6 +134,11 @@ export class Metronome {
 			this.getSynth().triggerAttackRelease(pitch, "32n", time, velocity);
 		}
 
+		// Ride pulse on the beat (the "ding"), independent of the click mute/backbeat.
+		if (this._subdivision !== "none" && !counting) {
+			this.onRide?.(time, beat === 0 ? 1 : 0.7);
+		}
+
 		// Dispatch synchronously at look-ahead so consumers can schedule audio at the
 		// future `time`. Visual updates are deferred to Tone.Draw by the consumers.
 		const tick: Tick = { beat, bar, counting, time };
@@ -140,12 +146,12 @@ export class Metronome {
 		this.tickIndex++;
 	}
 
-	// Off-beat ride click (the "and"). The 8n repeat fires on both on- and off-beats;
+	// Off-beat ride hit (the "and"). The 8n repeat fires on both on- and off-beats;
 	// on-beats are handled by fire(), so only the odd (off-beat) ticks sound here.
 	// Transport swing shifts these later when subdivision === "swing".
 	private fireSub(time: number): void {
 		const isOffbeat = this.subTick++ % 2 === 1;
-		if (!isOffbeat || this._subdivision === "none" || this.muted || this.inCountIn) return;
-		this.getSynth().triggerAttackRelease(RIDE_PITCH, "32n", time, 0.32);
+		if (!isOffbeat || this._subdivision === "none" || this.inCountIn) return;
+		this.onRide?.(time, 0.5);
 	}
 }
