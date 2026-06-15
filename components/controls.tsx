@@ -16,11 +16,13 @@ export function Segmented<T extends string>({
 	onChange,
 	options,
 	ariaLabel,
+	disabled = false,
 }: {
 	value: T;
 	onChange: (value: T) => void;
 	options: [T, string][];
 	ariaLabel?: string;
+	disabled?: boolean;
 }) {
 	return (
 		<div
@@ -28,19 +30,30 @@ export function Segmented<T extends string>({
 			aria-label={ariaLabel}
 			className="inline-flex rounded-full border border-white/15 p-0.5"
 		>
-			{options.map(([val, label]) => (
-				<button
-					key={val}
-					type="button"
-					onClick={() => onChange(val)}
-					aria-pressed={value === val}
-					className={`min-h-[36px] rounded-full px-3 py-1.5 text-sm transition-colors ${
-						value === val ? "bg-accent text-black" : "text-muted hover:text-foreground"
-					}`}
-				>
-					{label}
-				</button>
-			))}
+			{options.map(([val, label]) => {
+				const selected = value === val;
+				// When disabled, the selected option stays legible but goes neutral grey
+				// rather than accent — so an "off" channel never shows a dimmed red chip.
+				const cls = disabled
+					? selected
+						? "bg-white/10 text-foreground/60"
+						: "text-muted/50"
+					: selected
+						? "bg-accent text-black"
+						: "text-muted hover:text-foreground";
+				return (
+					<button
+						key={val}
+						type="button"
+						onClick={() => onChange(val)}
+						disabled={disabled}
+						aria-pressed={selected}
+						className={`min-h-[36px] rounded-full px-3 py-1.5 text-sm transition-colors ${cls}`}
+					>
+						{label}
+					</button>
+				);
+			})}
 		</div>
 	);
 }
@@ -62,8 +75,10 @@ export function IconToggle({
 			onClick={onClick}
 			aria-pressed={on}
 			title={title}
-			className={`min-h-[44px] rounded-full border px-3 py-2 text-sm transition-colors ${
-				on ? "border-accent/60 text-foreground" : "border-white/15 text-muted hover:text-foreground"
+			className={`min-h-[44px] rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+				on
+					? "border-accent bg-accent text-black"
+					: "border-white/15 text-muted hover:text-foreground"
 			}`}
 		>
 			{label}

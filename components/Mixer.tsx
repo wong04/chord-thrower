@@ -58,6 +58,7 @@ export function Mixer(props: MixerProps) {
 					mode={
 						<Segmented
 							ariaLabel="Click accent"
+							disabled={props.muted}
 							value={props.backbeat ? "backbeat" : "downbeat"}
 							onChange={(v) => props.onBackbeatChange(v === "backbeat")}
 							options={[
@@ -85,6 +86,7 @@ export function Mixer(props: MixerProps) {
 					mode={
 						<Segmented
 							ariaLabel="Voicing"
+							disabled={!props.audioEnabled}
 							value={props.voicing}
 							onChange={props.onVoicingChange}
 							options={[
@@ -113,6 +115,7 @@ export function Mixer(props: MixerProps) {
 					mode={
 						<Segmented
 							ariaLabel="Bass mode"
+							disabled={!bassOn}
 							value={bassOn ? (props.bassMode as Exclude<BassMode, "off">) : lastBass}
 							onChange={(m) => {
 								setLastBass(m);
@@ -143,6 +146,7 @@ export function Mixer(props: MixerProps) {
 					mode={
 						<Segmented
 							ariaLabel="Ride feel"
+							disabled={!rideOn}
 							value={rideOn ? (props.subdivision as Exclude<Subdivision, "none">) : lastRide}
 							onChange={(m) => {
 								setLastRide(m);
@@ -195,11 +199,7 @@ function ChannelStrip({
 					<IconToggle on={enabled} onClick={onToggle} label={enabled ? "On" : "Off"} title={name} />
 				</div>
 			</div>
-			<div
-				className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 pl-[1.125rem] transition-opacity ${
-					enabled ? "" : "opacity-40"
-				}`}
-			>
+			<div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 pl-[1.125rem]">
 				<div className="shrink-0">{mode}</div>
 				<div className="min-w-[12rem] flex-1">{fader}</div>
 			</div>
