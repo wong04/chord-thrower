@@ -18,8 +18,10 @@ import { Keyboard } from "@/components/Keyboard";
 import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
+import { EarTrainer } from "@/components/EarTrainer";
+import { useEarTrainer, EarMode } from "@/lib/ear/useEarTrainer";
 
-type Mode = "drill" | "patterns";
+type Mode = "drill" | "patterns" | "ear";
 
 const clampBpm = (bpm: number) => Math.max(MIN_BPM, Math.min(MAX_BPM, bpm));
 
@@ -52,6 +54,9 @@ export default function Home() {
 	const [rampStep, setRampStep] = usePersistentState("rampStep", 2);
 	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
 
+	// Ear-training settings
+	const [earMode, setEarMode] = usePersistentState<EarMode>("earMode", "quality");
+
 	const { play: playChord, ready: chordsReady } = useChordPlayer(audioEnabled, chordVolume);
 	const secondsPerBeat = 60 / bpm;
 
@@ -75,13 +80,21 @@ export default function Home() {
 			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
 	});
 
+	const ear = useEarTrainer({
+		level,
+		keyChoice,
+		tonality,
+		mode: earMode,
+		active: mode === "ear",
+	});
+
 	const metronome = useMetronome({
 		bpm,
 		beatsPerBar,
 		countInBars: countIn ? 1 : 0,
 		muted,
 		clickVolume,
-		onTick: mode === "drill" ? drill.onTick : pattern.onTick,
+		onTick: mode === "drill" ? drill.onTick : mode === "patterns" ? pattern.onTick : undefined,
 	});
 
 	const running = metronome.running;
@@ -184,9 +197,26 @@ export default function Home() {
 					<TabButton active={mode === "patterns"} onClick={() => setMode("patterns")}>
 						Patterns
 					</TabButton>
+					<TabButton active={mode === "ear"} onClick={() => setMode("ear")}>
+						Ear
+					</TabButton>
 				</nav>
 			)}
 
+			{mode === "ear" ? (
+				<EarTrainer
+					ear={ear}
+					mode={earMode}
+					onModeChange={setEarMode}
+					level={level}
+					onLevelChange={setLevel}
+					keyChoice={keyChoice}
+					onKeyChange={setKeyChoice}
+					tonality={tonality}
+					onTonalityChange={setTonality}
+				/>
+			) : (
+				<>
 			{hero}
 
 			{mode === "drill" && showKeyboard && drill.current && !metronome.counting && (
@@ -267,6 +297,8 @@ export default function Home() {
 				<p className="text-xs text-muted/70">
 					Space start/stop · ↑↓ tempo · F fullscreen
 				</p>
+			)}
+				</>
 			)}
 		</main>
 	);

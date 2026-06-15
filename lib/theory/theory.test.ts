@@ -5,6 +5,7 @@ import { KEYS, transposeForInstrument } from "./transpose";
 import { Level, qualityPool, randomChord, TIERS } from "./chordPool";
 import { tonicChord } from "./keyHarmony";
 import { scaleForChord, chordTones } from "./scales";
+import { makeQuestion } from "../ear/earQuestion";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -143,6 +144,26 @@ describe("tonic chord (first chord on start)", () => {
 		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭");
 		expect(tonicChord("C", "minor", 2).symbol).toBe("Cm7");
 		expect(tonicChord("C", "minor", 2).roman).toBe("i7");
+	});
+});
+
+describe("ear-training questions", () => {
+	it("quality mode: distinct option labels including the target", () => {
+		for (let n = 0; n < 50; n++) {
+			const q = makeQuestion({ level: 2, keyChoice: "all", tonality: "major", mode: "quality" });
+			expect(q.options.length).toBeGreaterThanOrEqual(2);
+			expect(new Set(q.labels).size).toBe(q.labels.length);
+			expect(q.options[q.correctIndex]).toBe(q.target);
+			expect(q.labels[q.correctIndex]).toBe(q.target.symbol);
+		}
+	});
+
+	it("function mode in a key labels options by Roman numeral", () => {
+		for (let n = 0; n < 50; n++) {
+			const q = makeQuestion({ level: 3, keyChoice: "C", tonality: "major", mode: "function" });
+			expect(q.labels[q.correctIndex]).toBe(q.target.roman);
+			expect(new Set(q.labels).size).toBe(q.labels.length);
+		}
 	});
 });
 
