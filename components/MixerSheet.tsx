@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { Ensemble, EnsembleProps } from "./Ensemble";
+import { Mixer, MixerProps } from "./Mixer";
 
 /**
- * Bottom sheet that surfaces the Ensemble mixer over the focus view, so all four
- * voices stay reachable while playing. Closes on backdrop tap, Esc, or the X.
+ * Bottom sheet that surfaces the mixer over the focus view, so all four voices
+ * stay reachable while playing. Closes on backdrop tap, Esc, or the X.
  */
 export function MixerSheet({
 	open,
 	onClose,
-	ensemble,
+	mixer,
 }: {
 	open: boolean;
 	onClose: () => void;
-	ensemble: EnsembleProps;
+	mixer: MixerProps;
 }) {
 	useEffect(() => {
 		if (!open) return;
@@ -48,7 +48,7 @@ export function MixerSheet({
 				>
 					✕
 				</button>
-				<Ensemble {...ensemble} />
+				<Mixer {...mixer} />
 			</div>
 		</div>
 	);

@@ -18,7 +18,7 @@ import { Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
 import { scaleForChord, chordTones } from "@/lib/theory/scales";
 import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
-import { Ensemble, EnsembleProps } from "@/components/Ensemble";
+import { Mixer, MixerProps } from "@/components/Mixer";
 import { MixerSheet } from "@/components/MixerSheet";
 import { ChordDisplay } from "@/components/ChordDisplay";
 import { Keyboard } from "@/components/Keyboard";
@@ -197,7 +197,7 @@ export default function Home() {
 		(bassMode !== "off" && !bassReady) ||
 		(subdivision !== "none" && !rideReady);
 
-	const ensembleProps: EnsembleProps = {
+	const mixerProps: MixerProps = {
 		muted,
 		onMutedChange: setMuted,
 		clickVolume,
@@ -329,7 +329,7 @@ export default function Home() {
 
 					{!running && (
 						<div className="zone w-full max-w-xl" style={{ animationDelay: "100ms" }}>
-							<Ensemble {...ensembleProps} />
+							<Mixer {...mixerProps} />
 						</div>
 					)}
 
@@ -384,7 +384,7 @@ export default function Home() {
 				</>
 			)}
 
-			<MixerSheet open={mixerOpen} onClose={() => setMixerOpen(false)} ensemble={ensembleProps} />
+			<MixerSheet open={mixerOpen} onClose={() => setMixerOpen(false)} mixer={mixerProps} />
 		</main>
 	);
 }
