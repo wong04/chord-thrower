@@ -1,5 +1,4 @@
 import * as Tone from "tone";
-import { Note } from "tonal";
 
 export type { BassMode } from "./bassNote";
 export { bassNote } from "./bassNote";
@@ -40,13 +39,13 @@ export class Bass {
 
 	/** Play a pitch-class note in the bass register at the given time. */
 	play(note: string, time: number, durationSeconds: number): void {
-		if (!this.sampler.loaded) return; // samples not ready yet — skip silently
-		// Convert to Hz (sidestepping Tone's note parser for spellings like E♯ or B𝄫).
-		const freq = Note.freq(`${note}2`);
-		if (!freq) return;
+		if (!this.sampler.loaded) return;
+		// Tone.Sampler needs a note name, not Hz. bassNote() only returns clean pitch
+		// classes (no double accidentals), so appending the octave is safe.
+		const noteName = `${note}2`;
 		const now = Tone.getContext().currentTime;
 		const at = time > now ? time : now + 0.005;
-		this.sampler.triggerAttackRelease(freq, Math.max(0.1, durationSeconds * 0.9), at, 0.9);
+		this.sampler.triggerAttackRelease(noteName, Math.max(0.1, durationSeconds * 0.9), at, 0.9);
 	}
 
 	dispose(): void {
