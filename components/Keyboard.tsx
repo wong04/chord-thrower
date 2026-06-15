@@ -28,10 +28,15 @@ export function Keyboard({
 	const chord = new Set(chordTones.map((n) => Note.chroma(n)).filter((c): c is number => c != null));
 	const scale = new Set(scaleNotes.map((n) => Note.chroma(n)).filter((c): c is number => c != null));
 
-	const whiteBg = (k: KeyClass) =>
-		k === "chord" ? "bg-accent" : k === "scale" ? "bg-accent/35" : "bg-foreground/85";
-	const blackBg = (k: KeyClass) =>
-		k === "chord" ? "bg-accent" : k === "scale" ? "bg-accent/55" : "bg-neutral-900";
+	// Solid colours only (no alpha) so highlights never blend with the dark stage
+	// behind them: chord = vivid coral, scale = light coral, none = key body.
+	const keyBg = (k: KeyClass, black: boolean) => {
+		if (k === "chord") return "bg-accent";
+		if (k === "scale") return "bg-[#ff9d85]";
+		return black ? "bg-neutral-900" : "bg-neutral-200";
+	};
+	const whiteBg = (k: KeyClass) => keyBg(k, false);
+	const blackBg = (k: KeyClass) => keyBg(k, true);
 
 	return (
 		<div className="relative h-24 w-full max-w-xl select-none" aria-hidden>
