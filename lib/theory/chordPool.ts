@@ -51,7 +51,15 @@ export function qualityPool(level: Level): QualityId[] {
 	return pool;
 }
 
-export type Chord = { root: string; quality: QualityId; symbol: string; roman?: string };
+export type Chord = {
+	/** Written root (after instrument transposition) — what the player reads. */
+	root: string;
+	/** Concert-pitch root — what reference audio should sound. */
+	concertRoot: string;
+	quality: QualityId;
+	symbol: string;
+	roman?: string;
+};
 
 /** Probability that a draw comes from the selected tier rather than the whole pool. */
 const TIER_BIAS = 0.6;
@@ -79,6 +87,7 @@ export function randomChord(
 	}
 	const fromTier = level > 1 && rng() < TIER_BIAS;
 	const quality = pick(fromTier ? TIERS[level].qualities : qualityPool(level), rng);
-	const root = transposeForInstrument(pick(KEYS, rng), instrument);
-	return { root, quality, symbol: formatChord(root, quality) };
+	const concertRoot = pick(KEYS, rng);
+	const root = transposeForInstrument(concertRoot, instrument);
+	return { root, concertRoot, quality, symbol: formatChord(root, quality) };
 }

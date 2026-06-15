@@ -34,6 +34,8 @@ export type TransportProps = {
 	onChordVolumeChange: (volume: number) => void;
 	beat: number;
 	counting: boolean;
+	/** True while the chord-audio samples are still loading. */
+	chordsLoading?: boolean;
 	/** Slim bar for focus mode. */
 	compact?: boolean;
 };
@@ -152,6 +154,9 @@ export function TransportControls(props: TransportProps) {
 						title="Metronome click"
 					/>
 				</div>
+				{props.chordsLoading && (
+					<span className="w-full text-right text-xs text-muted">loading piano sounds…</span>
+				)}
 			</div>
 
 			{/* Levels */}

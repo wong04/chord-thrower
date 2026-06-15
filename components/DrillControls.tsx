@@ -18,6 +18,8 @@ export function DrillControls({
 	onTonalityChange,
 	showRoman,
 	onShowRomanChange,
+	showKeyboard,
+	onShowKeyboardChange,
 	barsPerChord,
 	onBarsChange,
 	instrument,
@@ -33,6 +35,8 @@ export function DrillControls({
 	onTonalityChange: (tonality: Tonality) => void;
 	showRoman: boolean;
 	onShowRomanChange: (show: boolean) => void;
+	showKeyboard: boolean;
+	onShowKeyboardChange: (show: boolean) => void;
 	barsPerChord: number;
 	onBarsChange: (bars: number) => void;
 	instrument: Instrument;
@@ -77,7 +81,7 @@ export function DrillControls({
 						onChange={(e) => onKeyChange(e.target.value)}
 						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
 					>
-						<option value="all">All keys (random)</option>
+						<option value="all">All keys (chromatic)</option>
 						{KEYS.map((k) => (
 							<option key={k} value={k}>
 								{k}
@@ -158,6 +162,16 @@ export function DrillControls({
 					</select>
 				</Field>
 			</div>
+
+			<label className="flex items-center gap-2 text-sm text-muted">
+				<input
+					type="checkbox"
+					checked={showKeyboard}
+					onChange={(e) => onShowKeyboardChange(e.target.checked)}
+					className="h-4 w-4 accent-accent"
+				/>
+				Show scale &amp; keyboard
+			</label>
 		</div>
 	);
 }

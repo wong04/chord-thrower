@@ -4,14 +4,17 @@ import { useEffect, useRef } from "react";
 import { usePersistentState } from "@/lib/storage/usePersistentState";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useChordPlayer } from "@/lib/audio/useChordPlayer";
+import { useWakeLock } from "@/lib/audio/useWakeLock";
 import { useDrill } from "@/lib/drill/useDrill";
 import { usePattern, KeyCycle } from "@/lib/pattern/usePattern";
 import { Level } from "@/lib/theory/chordPool";
 import { Tonality } from "@/lib/theory/keyHarmony";
 import { Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
+import { scaleForChord, chordTones } from "@/lib/theory/scales";
 import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
 import { ChordDisplay } from "@/components/ChordDisplay";
+import { Keyboard } from "@/components/Keyboard";
 import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
@@ -38,6 +41,7 @@ export default function Home() {
 	const [keyChoice, setKeyChoice] = usePersistentState<string | "all">("keyChoice", "all");
 	const [tonality, setTonality] = usePersistentState<Tonality>("tonality", "major");
 	const [showRoman, setShowRoman] = usePersistentState("showRoman", false);
+	const [showKeyboard, setShowKeyboard] = usePersistentState("showKeyboard", false);
 	const [barsPerChord, setBarsPerChord] = usePersistentState("barsPerChord", 2);
 	const [nextPreview, setNextPreview] = usePersistentState<NextPreview>("nextPreview", "auto");
 
@@ -48,7 +52,7 @@ export default function Home() {
 	const [rampStep, setRampStep] = usePersistentState("rampStep", 2);
 	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
 
-	const playChord = useChordPlayer(audioEnabled, chordVolume);
+	const { play: playChord, ready: chordsReady } = useChordPlayer(audioEnabled, chordVolume);
 	const secondsPerBeat = 60 / bpm;
 
 	const drill = useDrill({
@@ -58,7 +62,7 @@ export default function Home() {
 		instrument,
 		barsPerChord,
 		onChordChange: (chord, time) =>
-			playChord(chord.root, chord.quality, time, barsPerChord * beatsPerBar * secondsPerBeat),
+			playChord(chord.concertRoot, chord.quality, time, barsPerChord * beatsPerBar * secondsPerBeat),
 	});
 	const pattern = usePattern({
 		progression,
@@ -68,7 +72,7 @@ export default function Home() {
 			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
 		},
 		onChordChange: (chord, time) =>
-			playChord(chord.root, chord.quality, time, chord.beats * secondsPerBeat),
+			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
 	});
 
 	const metronome = useMetronome({
@@ -81,6 +85,7 @@ export default function Home() {
 	});
 
 	const running = metronome.running;
+	useWakeLock(running);
 
 	// Stop the transport when switching modes so the engines don't overlap.
 	const { stop } = metronome;
@@ -184,6 +189,18 @@ export default function Home() {
 
 			{hero}
 
+			{mode === "drill" && showKeyboard && drill.current && !metronome.counting && (
+				<div className="flex w-full max-w-xl flex-col items-center gap-2">
+					<Keyboard
+						chordTones={chordTones(drill.current.root, drill.current.quality)}
+						scaleNotes={scaleForChord(drill.current.root, drill.current.quality).notes}
+					/>
+					<div className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+						{scaleForChord(drill.current.root, drill.current.quality).name}
+					</div>
+				</div>
+			)}
+
 			{mode === "patterns" && !running && (
 				<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} />
 			)}
@@ -207,7 +224,8 @@ export default function Home() {
 				onChordVolumeChange={setChordVolume}
 				beat={metronome.beat}
 				counting={metronome.counting}
-				compact={running}
+				chordsLoading={audioEnabled && !chordsReady}
+					compact={running}
 			/>
 
 			{!running &&
@@ -221,6 +239,8 @@ export default function Home() {
 						onTonalityChange={setTonality}
 						showRoman={showRoman}
 						onShowRomanChange={setShowRoman}
+						showKeyboard={showKeyboard}
+						onShowKeyboardChange={setShowKeyboard}
 						barsPerChord={barsPerChord}
 						onBarsChange={setBarsPerChord}
 						instrument={instrument}

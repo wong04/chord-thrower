@@ -4,6 +4,7 @@ import { formatChord } from "./qualities";
 import { KEYS, transposeForInstrument } from "./transpose";
 import { Level, qualityPool, randomChord, TIERS } from "./chordPool";
 import { tonicChord } from "./keyHarmony";
+import { scaleForChord, chordTones } from "./scales";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -142,6 +143,34 @@ describe("tonic chord (first chord on start)", () => {
 		expect(tonicChord("Eb", "major", 1).symbol).toBe("E♭");
 		expect(tonicChord("C", "minor", 2).symbol).toBe("Cm7");
 		expect(tonicChord("C", "minor", 2).roman).toBe("i7");
+	});
+});
+
+describe("scales & chord tones", () => {
+	it("maps qualities to sensible improv scales", () => {
+		expect(scaleForChord("G", "7").name).toContain("Mixolydian");
+		expect(scaleForChord("G", "7").notes).toEqual(["G", "A", "B", "C", "D", "E", "F"]);
+		expect(scaleForChord("D", "m7").name).toContain("Dorian");
+		expect(scaleForChord("C", "7alt").name).toContain("Altered");
+		expect(scaleForChord("C", "maj7").name).toContain("Major");
+	});
+
+	it("chord tones are a subset of the chosen scale (diatonic qualities)", () => {
+		for (const q of ["maj7", "m7", "7"] as const) {
+			const scale = new Set(scaleForChord("C", q).notes);
+			for (const tone of chordTones("C", q)) expect(scale.has(tone)).toBe(true);
+		}
+	});
+});
+
+describe("concert-pitch root for transposing playback", () => {
+	it("matches the written root in concert (C), differs for Bb", () => {
+		const concertChord = randomChord(2, "C", "major", "C");
+		expect(concertChord.concertRoot).toBe(concertChord.root);
+		// Eb concert tonic read by a Bb instrument is written F; concert stays Eb.
+		const tonic = tonicChord("Eb", "major", 2, "Bb");
+		expect(tonic.concertRoot).toBe("Eb");
+		expect(tonic.root).toBe("F");
 	});
 });
 

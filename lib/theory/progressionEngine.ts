@@ -1,5 +1,5 @@
 import { Note } from "tonal";
-import { formatChord, QualityId } from "./qualities";
+import { formatChord, QualityId, simplifyRoot } from "./qualities";
 import { Level } from "./chordPool";
 import { Instrument, transposeForInstrument } from "./transpose";
 
@@ -55,7 +55,10 @@ export type Progression = {
 };
 
 export type ResolvedChord = {
+	/** Written root (after instrument transposition). */
 	root: string;
+	/** Concert-pitch root — what reference audio should sound. */
+	concertRoot: string;
 	quality: QualityId;
 	symbol: string;
 	beats: number;
@@ -68,10 +71,11 @@ export function expandProgression(
 	instrument: Instrument = "C",
 ): ResolvedChord[] {
 	return prog.chords.map((chord) => {
-		const concertRoot = Note.transpose(tonic, DEGREE_INTERVAL[chord.degree]);
+		const concertRoot = simplifyRoot(Note.transpose(tonic, DEGREE_INTERVAL[chord.degree]));
 		const root = transposeForInstrument(concertRoot, instrument);
 		return {
 			root,
+			concertRoot,
 			quality: chord.quality,
 			symbol: formatChord(root, chord.quality),
 			beats: chord.beats,

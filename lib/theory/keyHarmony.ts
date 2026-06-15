@@ -1,5 +1,5 @@
 import { Note } from "tonal";
-import { formatChord, QualityId } from "./qualities";
+import { formatChord, QualityId, simplifyRoot } from "./qualities";
 import { Degree, DEGREE_INTERVAL } from "./progressionEngine";
 import { Instrument, transposeForInstrument } from "./transpose";
 import type { Chord, Level } from "./chordPool";
@@ -137,9 +137,15 @@ function pick<T>(items: readonly T[], rng: () => number): T {
 }
 
 function build(tonic: string, kc: KeyChord, instrument: Instrument): Chord {
-	const concertRoot = Note.transpose(tonic, DEGREE_INTERVAL[kc.degree]);
+	const concertRoot = simplifyRoot(Note.transpose(tonic, DEGREE_INTERVAL[kc.degree]));
 	const root = transposeForInstrument(concertRoot, instrument);
-	return { root, quality: kc.quality, symbol: formatChord(root, kc.quality), roman: kc.roman };
+	return {
+		root,
+		concertRoot,
+		quality: kc.quality,
+		symbol: formatChord(root, kc.quality),
+		roman: kc.roman,
+	};
 }
 
 /**
