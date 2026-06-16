@@ -63,6 +63,7 @@ export default function Home() {
 
 	// Pattern settings
 	const [progressionId, setProgressionId] = usePersistentState("progressionId", PROGRESSIONS[0].id);
+	const [patternKey, setPatternKey] = usePersistentState("patternKey", "C");
 	const [keyCycle, setKeyCycle] = usePersistentState<KeyCycle>("keyCycle", "lock");
 	const [tempoRamp, setTempoRamp] = usePersistentState("tempoRamp", false);
 	const [rampStep, setRampStep] = usePersistentState("rampStep", 2);
@@ -111,6 +112,7 @@ export default function Home() {
 		progression,
 		instrument,
 		keyCycle,
+		tonic: patternKey,
 		onRep: () => {
 			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
 		},
@@ -356,6 +358,8 @@ export default function Home() {
 								<PatternControls
 									progressionId={progressionId}
 									onProgressionChange={setProgressionId}
+									patternKey={patternKey}
+									onPatternKeyChange={setPatternKey}
 									keyCycle={keyCycle}
 									onKeyCycleChange={setKeyCycle}
 									instrument={instrument}

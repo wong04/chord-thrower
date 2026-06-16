@@ -13,6 +13,8 @@ export type PatternSettings = {
 	progression: Progression;
 	instrument: Instrument;
 	keyCycle: KeyCycle;
+	/** Home key the pattern starts in (and returns to on Start / when key-locked). */
+	tonic: string;
 	/** Fired when a full repetition of the progression completes. */
 	onRep?: () => void;
 	/** Called when a new chord starts sounding, with its audio-clock time. */
@@ -85,6 +87,10 @@ export function usePattern(settings: PatternSettings): PatternState {
 	useEffect(() => {
 		cycleRef.current = keyCycle;
 	});
+	const baseTonicRef = useRef(settings.tonic);
+	useEffect(() => {
+		baseTonicRef.current = settings.tonic;
+	});
 	const onChordChangeRef = useRef(settings.onChordChange);
 	useEffect(() => {
 		onChordChangeRef.current = settings.onChordChange;
@@ -94,16 +100,17 @@ export function usePattern(settings: PatternSettings): PatternState {
 		onBeatRef.current = settings.onBeat;
 	});
 
-	const [tonic, setTonic] = useState(progression.defaultTonic);
+	const [tonic, setTonic] = useState(settings.tonic);
 	const [activeIndex, setActiveIndex] = useState(0);
 	const beatRef = useRef(0);
 
-	// Reset to the progression's home key whenever the chosen pattern changes
-	// (render-phase reset on prop change; the beat counter resets on Start).
-	const [prevProgId, setPrevProgId] = useState(progression.id);
-	if (progression.id !== prevProgId) {
-		setPrevProgId(progression.id);
-		setTonic(progression.defaultTonic);
+	// Reset to the chosen home key whenever the pattern or key changes (render-phase
+	// reset on prop change; the beat counter resets on Start).
+	const resetSig = `${progression.id}|${settings.tonic}`;
+	const [prevSig, setPrevSig] = useState(resetSig);
+	if (resetSig !== prevSig) {
+		setPrevSig(resetSig);
+		setTonic(settings.tonic);
 		setActiveIndex(0);
 	}
 
@@ -138,6 +145,7 @@ export function usePattern(settings: PatternSettings): PatternState {
 		beatRef.current = 0;
 		lastIdxRef.current = -1;
 		setActiveIndex(0);
+		setTonic(baseTonicRef.current);
 	}, []);
 
 	const onTick = useCallback((tick: Tick) => {

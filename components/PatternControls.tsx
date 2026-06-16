@@ -1,7 +1,7 @@
 "use client";
 
 import { Level, TIERS } from "@/lib/theory/chordPool";
-import { INSTRUMENTS, Instrument } from "@/lib/theory/transpose";
+import { INSTRUMENTS, Instrument, KEYS } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
 import { KeyCycle } from "@/lib/pattern/usePattern";
 import { TempoRamp } from "./TempoRamp";
@@ -9,6 +9,8 @@ import { TempoRamp } from "./TempoRamp";
 export function PatternControls({
 	progressionId,
 	onProgressionChange,
+	patternKey,
+	onPatternKeyChange,
 	keyCycle,
 	onKeyCycleChange,
 	instrument,
@@ -20,6 +22,8 @@ export function PatternControls({
 }: {
 	progressionId: string;
 	onProgressionChange: (id: string) => void;
+	patternKey: string;
+	onPatternKeyChange: (key: string) => void;
 	keyCycle: KeyCycle;
 	onKeyCycleChange: (cycle: KeyCycle) => void;
 	instrument: Instrument;
@@ -50,6 +54,20 @@ export function PatternControls({
 			</Field>
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<Field label="Key">
+					<select
+						value={patternKey}
+						onChange={(e) => onPatternKeyChange(e.target.value)}
+						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+					>
+						{KEYS.map((k) => (
+							<option key={k} value={k}>
+								{k}
+							</option>
+						))}
+					</select>
+				</Field>
+
 				<Field label="Key cycling">
 					<select
 						value={keyCycle}
