@@ -85,9 +85,43 @@ export class ChordPlayer {
 		// Schedule exactly on the beat `time` (the click uses the same value). Only nudge
 		// forward if `time` is already in the past — compare against the raw audio clock,
 		// not Tone.now() (which adds the look-ahead and would push every chord late).
-		const now = Tone.getContext().currentTime;
-		const at = time > now ? time : now + 0.005;
+		const at = this.at(time);
 		this.sampler.triggerAttackRelease(freqs, Math.max(0.1, durationSeconds * 0.95), at, 0.5);
+	}
+
+	/** Play a single pitch (e.g. "E4") — used for scale-degree ear training. */
+	playPitch(note: string, time: number, durationSeconds: number): void {
+		if (!this.sampler.loaded) return;
+		const freq = Note.freq(note);
+		if (!freq) return;
+		this.sampler.triggerAttackRelease(freq, Math.max(0.1, durationSeconds * 0.95), this.at(time), 0.6);
+	}
+
+	/** Roll the chord's tones one at a time, `stepSeconds` apart. */
+	arpeggiate(root: string, quality: QualityId, time: number, stepSeconds = 0.22): void {
+		if (!this.sampler.loaded) return;
+		const freqs = voicing(root, quality, this.voicing);
+		const start = this.at(time);
+		freqs.forEach((freq, i) => {
+			this.sampler.triggerAttackRelease(freq, Math.max(0.2, stepSeconds * 1.4), start + i * stepSeconds, 0.5);
+		});
+	}
+
+	/** Play a sequence of chords back-to-back — used to establish a key (cadence). */
+	playSequence(
+		chords: { root: string; quality: QualityId }[],
+		startTime: number,
+		perChordSeconds: number,
+	): void {
+		chords.forEach((chord, i) => {
+			this.play(chord.root, chord.quality, startTime + i * perChordSeconds, perChordSeconds);
+		});
+	}
+
+	/** Resolve a scheduling time against the raw audio clock (nudge past times forward). */
+	private at(time: number): number {
+		const now = Tone.getContext().currentTime;
+		return time > now ? time : now + 0.005;
 	}
 
 	dispose(): void {

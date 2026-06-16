@@ -164,6 +164,31 @@ export function randomKeyChord(
 	return build(tonic, pick(set, rng), instrument);
 }
 
+// A short I–IV–V–I cadence used to establish a key aurally before an ear-training
+// question. Minor uses a major V (harmonic-minor dominant) for a clear pull home.
+const MAJOR_CADENCE: KeyChord[] = [
+	c("I", "maj", "I"),
+	c("IV", "maj", "IV"),
+	c("V", "maj", "V"),
+	c("I", "maj", "I"),
+];
+const MINOR_CADENCE: KeyChord[] = [
+	c("I", "min", "i"),
+	c("IV", "min", "iv"),
+	c("V", "maj", "V"),
+	c("I", "min", "i"),
+];
+
+/** The I–IV–V–I cadence of a key, to plant the tonic before a functional ear question. */
+export function establishKeyCadence(
+	tonic: string,
+	tonality: Tonality,
+	instrument: Instrument = "C",
+): Chord[] {
+	const cadence = tonality === "major" ? MAJOR_CADENCE : MINOR_CADENCE;
+	return cadence.map((kc) => build(tonic, kc, instrument));
+}
+
 // The tonic (I) chord at a level-appropriate quality, for the first chord on Start.
 const TONIC_CHORD: Record<Tonality, Record<Level, { quality: QualityId; roman: string }>> = {
 	major: {

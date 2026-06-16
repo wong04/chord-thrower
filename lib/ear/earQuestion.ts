@@ -1,7 +1,7 @@
 import { Chord, Level, randomChord } from "@/lib/theory/chordPool";
 import { Tonality } from "@/lib/theory/keyHarmony";
 
-export type EarMode = "quality" | "function";
+export type EarMode = "quality" | "function" | "degree";
 
 export type EarQuestion = {
 	target: Chord;

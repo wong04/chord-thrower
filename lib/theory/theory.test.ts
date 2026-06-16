@@ -8,6 +8,10 @@ import { scaleForChord, chordTones } from "./scales";
 import { makeQuestion } from "../ear/earQuestion";
 import { bassNote } from "../audio/bassNote";
 import { rideSkipBeats } from "../audio/ridePattern";
+import { establishKeyCadence } from "./keyHarmony";
+import { makeDegreeQuestion } from "../ear/degreeQuestion";
+import { EarItem } from "../ear/earItem";
+import { EarTestResult, summarizeTest } from "../ear/testSummary";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -184,6 +188,82 @@ describe("ride spang-a-lang pattern by meter", () => {
 	});
 	it("6/8 (two waltz cells) skips after beats 2 and 5", () => {
 		expect(rideSkipBeats(6)).toEqual([1, 4]);
+	});
+});
+
+describe("establishKeyCadence (I–IV–V–I)", () => {
+	it("major: C → C F G C, all major", () => {
+		const cadence = establishKeyCadence("C", "major");
+		expect(cadence.map((c) => c.concertRoot)).toEqual(["C", "F", "G", "C"]);
+		expect(cadence.map((c) => c.quality)).toEqual(["maj", "maj", "maj", "maj"]);
+	});
+	it("minor: A → A D E A, with a major V", () => {
+		const cadence = establishKeyCadence("A", "minor");
+		expect(cadence.map((c) => c.concertRoot)).toEqual(["A", "D", "E", "A"]);
+		expect(cadence.map((c) => c.quality)).toEqual(["min", "min", "maj", "min"]);
+	});
+});
+
+describe("scale-degree ear questions", () => {
+	it("level 1 only draws tonic-triad degrees (1, 3, 5)", () => {
+		for (let n = 0; n < 200; n++) {
+			const q = makeDegreeQuestion({ keyChoice: "C", tonality: "major", level: 1 });
+			expect([0, 2, 4]).toContain(q.targetIndex);
+		}
+	});
+	it("target note matches the key's scale degree", () => {
+		const q = makeDegreeQuestion({ keyChoice: "C", tonality: "major", level: 1 });
+		expect(q.scaleNotes.slice(0, 7)).toEqual(["C", "D", "E", "F", "G", "A", "B"]);
+		expect(q.targetNote).toBe(`${q.scaleNotes[q.targetIndex]}4`);
+	});
+	it("minor uses the natural-minor scale", () => {
+		const q = makeDegreeQuestion({ keyChoice: "C", tonality: "minor", level: 2 });
+		expect(q.scaleNotes.slice(0, 7)).toEqual(["C", "D", "Eb", "F", "G", "Ab", "Bb"]);
+	});
+	it("options are distinct and include the target at correctIndex", () => {
+		for (let n = 0; n < 100; n++) {
+			const q = makeDegreeQuestion({ keyChoice: "G", tonality: "major", level: 3 });
+			expect(new Set(q.options).size).toBe(q.options.length);
+			expect(q.options[q.correctIndex]).toBe(q.targetIndex);
+			expect(q.labels.length).toBe(q.options.length);
+		}
+	});
+});
+
+describe("ear test scoring", () => {
+	const item = (labels: string[], correctIndex: number, categoryLabel: string): EarItem => ({
+		mode: "quality",
+		labels,
+		correctIndex,
+		categoryLabel,
+		revealNotes: [],
+	});
+	const results: EarTestResult[] = [
+		{ item: item(["I", "IV", "V", "vi"], 0, "I"), picks: [0], correct: true, attemptsUsed: 1 },
+		{ item: item(["I", "IV", "V", "vi"], 1, "IV"), picks: [0, 1], correct: true, attemptsUsed: 2 },
+		{ item: item(["I", "IV", "V", "vi"], 2, "V"), picks: [0, 1], correct: false, attemptsUsed: 2 },
+		{ item: item(["I", "IV", "V", "vi"], 0, "I"), picks: [2], correct: false, attemptsUsed: 1 },
+	];
+
+	it("computes score and wrong percentages", () => {
+		const s = summarizeTest(results);
+		expect(s.total).toBe(4);
+		expect(s.correct).toBe(2);
+		expect(s.scorePct).toBe(50);
+		expect(s.wrongPct).toBe(50);
+	});
+	it("lists missed items with the answer and the user's picks", () => {
+		const s = summarizeTest(results);
+		expect(s.missed).toHaveLength(2);
+		expect(s.missed[0]).toEqual({ answer: "V", picked: ["I", "IV"] });
+		expect(s.missed[1]).toEqual({ answer: "I", picked: ["V"] });
+	});
+	it("ranks per-answer accuracy weakest first", () => {
+		const s = summarizeTest(results);
+		// "I" appeared twice (1 right, 1 wrong = 50%), "IV" 100%, "V" 0% → V weakest.
+		expect(s.perCategory[0].label).toBe("V");
+		const i = s.perCategory.find((c) => c.label === "I");
+		expect(i).toEqual({ label: "I", correct: 1, total: 2 });
 	});
 });
 

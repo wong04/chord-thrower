@@ -26,7 +26,7 @@ import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
 import { EarTrainer } from "@/components/EarTrainer";
-import { useEarTrainer, EarMode } from "@/lib/ear/useEarTrainer";
+import { EarMode } from "@/lib/ear/earItem";
 
 type Mode = "drill" | "patterns" | "ear";
 
@@ -117,14 +117,6 @@ export default function Home() {
 		onChordChange: (chord, time) =>
 			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
 		onBeat,
-	});
-
-	const ear = useEarTrainer({
-		level,
-		keyChoice,
-		tonality,
-		mode: earMode,
-		active: mode === "ear",
 	});
 
 	const metronome = useMetronome({
@@ -279,7 +271,7 @@ export default function Home() {
 
 			{mode === "ear" ? (
 				<EarTrainer
-					ear={ear}
+					active={mode === "ear"}
 					mode={earMode}
 					onModeChange={setEarMode}
 					level={level}
