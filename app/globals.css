@@ -93,3 +93,17 @@ body::before {
     animation: none;
   }
 }
+
+/* abcjs renders black-on-transparent by default; tint it for the dark stage. */
+.abc-score svg {
+  width: 100%;
+  height: auto;
+}
+.abc-score svg path {
+  fill: var(--foreground);
+  stroke: var(--foreground);
+}
+.abc-score svg text {
+  fill: var(--foreground);
+  stroke: none;
+}

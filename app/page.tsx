@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePersistentState } from "@/lib/storage/usePersistentState";
 import { useMetronome } from "@/lib/audio/useMetronome";
 import { useChordPlayer } from "@/lib/audio/useChordPlayer";
@@ -17,6 +17,8 @@ import { Tonality } from "@/lib/theory/keyHarmony";
 import { Instrument } from "@/lib/theory/transpose";
 import { PROGRESSIONS } from "@/lib/theory/progressions";
 import { scaleForChord, chordTones } from "@/lib/theory/scales";
+import { STANDARDS, standardById, Standard } from "@/lib/standards/standards";
+import { standardToProgression } from "@/lib/standards/standardProgression";
 import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
 import { Mixer, MixerProps } from "@/components/Mixer";
 import { MixerSheet } from "@/components/MixerSheet";
@@ -25,10 +27,12 @@ import { Keyboard } from "@/components/Keyboard";
 import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
+import { Standards } from "@/components/Standards";
+import { AbcScore } from "@/components/AbcScore";
 import { EarTrainer } from "@/components/EarTrainer";
 import { EarMode } from "@/lib/ear/earItem";
 
-type Mode = "drill" | "patterns" | "ear";
+type Mode = "drill" | "patterns" | "ear" | "standards";
 
 const clampBpm = (bpm: number) => Math.max(MIN_BPM, Math.min(MAX_BPM, bpm));
 
@@ -68,6 +72,16 @@ export default function Home() {
 	const [tempoRamp, setTempoRamp] = usePersistentState("tempoRamp", false);
 	const [rampStep, setRampStep] = usePersistentState("rampStep", 2);
 	const progression = PROGRESSIONS.find((p) => p.id === progressionId) ?? PROGRESSIONS[0];
+
+	// Standards settings
+	const [standardId, setStandardId] = usePersistentState("standardId", STANDARDS[0].id);
+	const [standardKey, setStandardKey] = usePersistentState("standardKey", STANDARDS[0].homeKey);
+	const standard = standardById(standardId) ?? STANDARDS[0];
+	const standardProg = useMemo(() => standardToProgression(standard), [standard]);
+	const selectStandard = (std: Standard) => {
+		setStandardId(std.id);
+		setStandardKey(std.homeKey);
+	};
 
 	// Ear-training settings
 	const [earMode, setEarMode] = usePersistentState<EarMode>("earMode", "quality");
@@ -120,7 +134,18 @@ export default function Home() {
 			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
 		onBeat,
 	});
+	const standards = usePattern({
+		progression: standardProg,
+		instrument,
+		keyCycle: "lock",
+		tonic: standardKey,
+		onChordChange: (chord, time) =>
+			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
+		onBeat,
+	});
 
+	const activeEngine =
+		mode === "drill" ? drill.onTick : mode === "patterns" ? pattern.onTick : mode === "standards" ? standards.onTick : undefined;
 	const metronome = useMetronome({
 		bpm,
 		beatsPerBar,
@@ -129,7 +154,7 @@ export default function Home() {
 		clickVolume,
 		subdivision,
 		backbeat,
-		onTick: mode === "drill" ? drill.onTick : mode === "patterns" ? pattern.onTick : undefined,
+		onTick: activeEngine,
 		onRide: playRide,
 	});
 
@@ -148,6 +173,7 @@ export default function Home() {
 			return;
 		}
 		if (mode === "drill") drill.reset();
+		else if (mode === "standards") standards.reset();
 		else pattern.reset();
 		void metronome.start();
 	};
@@ -214,12 +240,13 @@ export default function Home() {
 		onRideVolumeChange: setRideVolume,
 	};
 
-	// Hero content per mode.
-	const activeChord = pattern.chords[pattern.activeIndex];
+	// Hero content per mode. Patterns + Standards share the chart-playing engine.
+	const chartEngine = mode === "standards" ? standards : pattern;
+	const chartActive = chartEngine.chords[chartEngine.activeIndex];
 	const drillShowNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
-	let patternBar = 0;
-	pattern.bars.forEach((b, i) => {
-		if (pattern.activeIndex >= b.startIndex) patternBar = i;
+	let chartBar = 0;
+	chartEngine.bars.forEach((b, i) => {
+		if (chartEngine.activeIndex >= b.startIndex) chartBar = i;
 	});
 
 	const hero =
@@ -236,14 +263,15 @@ export default function Home() {
 		) : (
 			<div className="flex flex-col items-center gap-3">
 				<ChordDisplay
-					symbol={activeChord?.symbol ?? null}
-					nextSymbol={pattern.chords[(pattern.activeIndex + 1) % (pattern.chords.length || 1)]?.symbol}
+					symbol={chartActive?.symbol ?? null}
+					nextSymbol={chartEngine.chords[(chartEngine.activeIndex + 1) % (chartEngine.chords.length || 1)]?.symbol}
 					showNext
 					countdown={countdown}
 					focused={running}
 				/>
 				<div className="font-mono text-xs uppercase tracking-[0.25em] text-muted">
-					key of {pattern.tonic} · bar {patternBar + 1}/{pattern.bars.length}
+					{mode === "standards" ? `${standard.title} · ` : ""}key of {chartEngine.tonic} · bar{" "}
+					{chartBar + 1}/{chartEngine.bars.length}
 				</div>
 			</div>
 		);
@@ -264,6 +292,9 @@ export default function Home() {
 					</TabButton>
 					<TabButton active={mode === "patterns"} onClick={() => setMode("patterns")}>
 						Patterns
+					</TabButton>
+					<TabButton active={mode === "standards"} onClick={() => setMode("standards")}>
+						Standards
 					</TabButton>
 					<TabButton active={mode === "ear"} onClick={() => setMode("ear")}>
 						Ear
@@ -299,8 +330,12 @@ export default function Home() {
 						</div>
 					)}
 
-					{mode === "patterns" && !running && (
-						<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} />
+					{(mode === "patterns" || mode === "standards") && !running && (
+						<PatternChart bars={chartEngine.bars} activeIndex={chartEngine.activeIndex} />
+					)}
+
+					{mode === "standards" && standard.melodyAbc && (
+						<AbcScore abc={standard.melodyAbc} homeKey={standard.homeKey} toKey={standardKey} />
 					)}
 
 					<div className="zone w-full max-w-xl" style={{ animationDelay: "40ms" }}>
@@ -328,7 +363,17 @@ export default function Home() {
 					)}
 
 					{!running &&
-						(mode === "drill" ? (
+						(mode === "standards" ? (
+							<div className="zone w-full max-w-xl" style={{ animationDelay: "160ms" }}>
+								<Standards
+									standard={standard}
+									selectedId={standardId}
+									onSelect={selectStandard}
+									standardKey={standardKey}
+									onKeyChange={setStandardKey}
+								/>
+							</div>
+						) : mode === "drill" ? (
 							<div className="zone w-full max-w-xl" style={{ animationDelay: "160ms" }}>
 								<DrillControls
 									level={level}

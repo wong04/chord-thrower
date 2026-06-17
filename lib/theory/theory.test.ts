@@ -12,6 +12,8 @@ import { establishKeyCadence } from "./keyHarmony";
 import { makeDegreeQuestion } from "../ear/degreeQuestion";
 import { EarItem } from "../ear/earItem";
 import { EarTestResult, summarizeTest } from "../ear/testSummary";
+import { STANDARDS } from "../standards/standards";
+import { standardToProgression } from "../standards/standardProgression";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 
@@ -358,4 +360,36 @@ describe("every catalog progression resolves without empty roots", () => {
 			}
 		});
 	}
+});
+
+describe("jazz standards", () => {
+	it("every standard resolves in all 12 keys with real roots and positive beats", () => {
+		for (const std of STANDARDS) {
+			const prog = standardToProgression(std);
+			for (const key of KEYS) {
+				const chords = expandProgression(prog, key);
+				expect(chords.length).toBe(std.chords.length);
+				for (const chord of chords) {
+					expect(chord.root).toMatch(/^[A-G]/);
+					expect(chord.beats).toBeGreaterThan(0);
+				}
+			}
+		}
+	});
+
+	it("only public-domain tunes carry a melody", () => {
+		for (const std of STANDARDS) {
+			if (std.melodyAbc) expect(std.publicDomain).toBe(true);
+		}
+	});
+
+	it("standardToProgression preserves chord count and total beats", () => {
+		for (const std of STANDARDS) {
+			const prog = standardToProgression(std);
+			expect(prog.chords.length).toBe(std.chords.length);
+			const beats = (cs: { beats: number }[]) => cs.reduce((a, c) => a + c.beats, 0);
+			expect(beats(prog.chords)).toBe(beats(std.chords));
+			expect(prog.defaultTonic).toBe(std.homeKey);
+		}
+	});
 });
