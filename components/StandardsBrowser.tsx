@@ -11,7 +11,7 @@ function Stars({ n }: { n: number }) {
 	);
 }
 
-/** Pick a tune. Each row shows difficulty stars and a melody badge for PD tunes. */
+/** Pick a tune. Each row shows difficulty stars. */
 export function StandardsBrowser({
 	selectedId,
 	onSelect,
@@ -33,14 +33,7 @@ export function StandardsBrowser({
 						}`}
 					>
 						<div className="min-w-0 flex-1">
-							<div className="flex items-center gap-2">
-								<span className="truncate font-display text-sm font-medium">{std.title}</span>
-								{std.melodyAbc && (
-									<span className="shrink-0 rounded-full border border-accent/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent">
-										melody
-									</span>
-								)}
-							</div>
+							<div className="truncate font-display text-sm font-medium">{std.title}</div>
 							<div className="truncate text-xs text-muted">
 								{std.composer} · {std.form}
 							</div>

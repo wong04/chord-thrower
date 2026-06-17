@@ -39,13 +39,8 @@ export function Standards({
 				</label>
 				<span className="ml-auto text-xs text-muted">
 					{standard.composer} · {standard.year}
-					{standard.melodyAbc ? " · melody PD" : ""}
 				</span>
 			</div>
-
-			<p className="text-xs text-muted/60">
-				Melodies shown are public-domain transcriptions. Chord changes are not copyrightable.
-			</p>
 		</div>
 	);
 }

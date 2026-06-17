@@ -11,16 +11,14 @@ export type Standard = {
 	title: string;
 	composer: string;
 	year: number;
-	/** Public-domain melody may be shipped (pre-~1930). Chord changes ship regardless. */
-	publicDomain: boolean;
 	difficulty: 1 | 2 | 3 | 4 | 5;
-	/** Concert home key the changes/melody are written in. */
+	/** Concert home key the changes are written in. */
 	homeKey: string;
 	form: string;
 	/** Roman-numeral changes relative to homeKey — transposable; drives chart + backing. */
 	chords: ProgressionChord[];
-	/** Full ABC tune (melody + chord symbols) in homeKey. PD tunes only. */
-	melodyAbc?: string;
+	/** Optional section labels for the chord chart, e.g. A/B/C markers. */
+	sections?: Array<{ bar: number; label: string }>;
 };
 
 export const STANDARDS: Standard[] = [
@@ -29,40 +27,39 @@ export const STANDARDS: Standard[] = [
 		title: "Blue Bossa",
 		composer: "Kenny Dorham",
 		year: 1963,
-		publicDomain: false,
 		difficulty: 2,
 		homeKey: "C",
 		form: "16-bar · minor",
-		// i | iv | ii°–V | i | bIII–bVI ii-V into bII | ii°–V | i
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "B" }, { bar: 12, label: "A" }],
 		chords: [
+			// A — C minor
 			c("I", "m7", 8),
 			c("IV", "m7", 8),
-			c("II", "m7b5", 4),
-			c("V", "7b9", 4),
+			c("II", "m7b5", 4), c("V", "7b9", 4),
 			c("I", "m7", 8),
-			c("bIII", "m7", 4),
-			c("bVI", "7", 4),
+			// B — Db major
+			c("bIII", "m7", 4), c("bVI", "7", 4),
 			c("bII", "maj7", 8),
-			c("II", "m7b5", 4),
-			c("V", "7b9", 4),
+			// A' — back to C minor
+			c("II", "m7b5", 4), c("V", "7b9", 4),
 			c("I", "m7", 8),
 		],
 	},
 	{
 		id: "take-the-a-train",
-		title: "Take the “A” Train",
+		title: 'Take the “A” Train',
 		composer: "Billy Strayhorn",
 		year: 1939,
-		publicDomain: false,
 		difficulty: 2,
 		homeKey: "C",
 		form: "AABA · 32",
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "A" }, { bar: 16, label: "B" }, { bar: 24, label: "A" }],
 		chords: [
 			// A
 			c("I", "maj7", 8), c("II", "7", 8), c("II", "m7", 4), c("V", "7", 4), c("I", "maj7", 4), c("V", "7", 4),
 			// A
 			c("I", "maj7", 8), c("II", "7", 8), c("II", "m7", 4), c("V", "7", 4), c("I", "maj7", 4), c("V", "7", 4),
-			// B (to IV)
+			// B
 			c("IV", "maj7", 16), c("II", "7", 8), c("II", "m7", 4), c("V", "7", 4),
 			// A
 			c("I", "maj7", 8), c("II", "7", 8), c("II", "m7", 4), c("V", "7", 4), c("I", "maj7", 8),
@@ -73,12 +70,12 @@ export const STANDARDS: Standard[] = [
 		title: "Autumn Leaves",
 		composer: "Joseph Kosma",
 		year: 1945,
-		publicDomain: false,
 		difficulty: 2,
 		homeKey: "G",
-		form: "32 · relative ii–V cycle",
+		form: "AABC · 32",
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "A" }, { bar: 16, label: "B" }, { bar: 24, label: "C" }],
 		chords: [
-			// A1: iv bVII bIII bVI | ii° V i
+			// A1
 			c("IV", "m7", 4), c("bVII", "7", 4), c("bIII", "maj7", 4), c("bVI", "maj7", 4),
 			c("II", "m7b5", 4), c("V", "7b9", 4), c("I", "m7", 8),
 			// A2
@@ -97,7 +94,6 @@ export const STANDARDS: Standard[] = [
 		title: "Lady Bird",
 		composer: "Tadd Dameron",
 		year: 1939,
-		publicDomain: false,
 		difficulty: 3,
 		homeKey: "C",
 		form: "16 · Dameron turnaround",
@@ -118,10 +114,10 @@ export const STANDARDS: Standard[] = [
 		title: "Summertime",
 		composer: "George Gershwin",
 		year: 1935,
-		publicDomain: false,
 		difficulty: 2,
 		homeKey: "A",
 		form: "16 · minor",
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "B" }],
 		chords: [
 			c("I", "m7", 4), c("II", "m7b5", 2), c("V", "7", 2), c("I", "m7", 4), c("V", "m7", 2), c("I", "7", 2),
 			c("IV", "m7", 4), c("bVI", "7", 4), c("V", "7", 8),
@@ -134,31 +130,20 @@ export const STANDARDS: Standard[] = [
 		title: "St. Louis Blues",
 		composer: "W. C. Handy",
 		year: 1914,
-		publicDomain: true,
 		difficulty: 2,
 		homeKey: "G",
-		form: "12-bar blues (first strain)",
+		form: "12-bar blues",
 		chords: [
 			c("I", "7", 4), c("IV", "7", 4), c("I", "7", 4), c("I", "7", 4),
 			c("IV", "7", 4), c("IV", "7", 4), c("I", "7", 4), c("I", "7", 4),
 			c("V", "7", 4), c("IV", "7", 4), c("I", "7", 4), c("V", "7", 4),
 		],
-		melodyAbc: `X:1
-T:St. Louis Blues (first strain)
-C:W. C. Handy (1914) — Public Domain
-M:4/4
-L:1/8
-K:G
-"G7" B3 B B2 A2 | "C7" G4 z4 | "G7" B3 B B2 A2 | "G7" G4 z4 |
-"C7" e3 e e2 d2 | "C7" c4 z4 | "G7" B3 B B2 A2 | "G7" G4 z4 |
-"D7" A3 A B2 A2 | "C7" G2 E2 G2 A2 | "G7" B4 A2 G2 | "D7" G4 z4 |]`,
 	},
 	{
 		id: "after-youve-gone",
 		title: "After You've Gone",
 		composer: "Creamer & Layton",
 		year: 1918,
-		publicDomain: true,
 		difficulty: 2,
 		homeKey: "F",
 		form: "16 · major",
@@ -168,14 +153,62 @@ K:G
 			c("I", "maj7", 4), c("I", "7", 4), c("IV", "maj7", 4), c("IV", "m7", 4),
 			c("I", "maj7", 2), c("VI", "7", 2), c("II", "7", 2), c("V", "7", 2), c("I", "maj7", 8),
 		],
-		melodyAbc: `X:1
-T:After You've Gone (chorus)
-C:Creamer & Layton (1918) — Public Domain
-M:4/4
-L:1/8
-K:F
-"F" A3 G A2 c2 | "F7" c6 A2 | "Bb" d3 c d2 f2 | "Bbm" f6 z2 |
-"F" c3 A c2 F2 | "D7" A3 F A2 d2 | "G7" d4 "C7" c4 | "F" F6 z2 |]`,
+	},
+	{
+		id: "giant-steps",
+		title: "Giant Steps",
+		composer: "John Coltrane",
+		year: 1960,
+		difficulty: 4,
+		homeKey: "B",
+		form: "16 · Coltrane changes",
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "B" }],
+		// 3-tonic cycle: B (I) → G (bVI) → Eb (III), each preceded by its own V7
+		chords: [
+			// A
+			c("I", "maj7", 4),                         // Bmaj7
+			c("bIII", "7", 4),                          // D7
+			c("bVI", "maj7", 4),                        // Gmaj7
+			c("VII", "7", 4),                           // Bb7
+			c("III", "maj7", 4),                        // Ebmaj7
+			c("bVII", "m7", 2), c("bIII", "7", 2),     // Am7  D7
+			c("bVI", "maj7", 4),                        // Gmaj7
+			c("VII", "7", 4),                           // Bb7
+			// B
+			c("III", "maj7", 4),                        // Ebmaj7
+			c("V", "7", 4),                             // F#7
+			c("I", "maj7", 4),                          // Bmaj7
+			c("bV", "m7", 2), c("VII", "7", 2),         // Fm7  Bb7
+			c("III", "maj7", 4),                        // Ebmaj7
+			c("II", "7", 4),                            // C#7
+			c("V", "maj7", 4),                          // F#maj7
+			c("II", "7", 2), c("V", "7", 2),            // C#7  F#7 (turnaround)
+		],
+	},
+	{
+		id: "so-what",
+		title: "So What",
+		composer: "Miles Davis",
+		year: 1959,
+		difficulty: 2,
+		homeKey: "D",
+		form: "AABA · 32 · modal",
+		sections: [{ bar: 0, label: "A" }, { bar: 8, label: "A" }, { bar: 16, label: "B" }, { bar: 24, label: "A" }],
+		// D Dorian (A sections), Eb Dorian = bII (B section)
+		chords: [
+			// A
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+			// A
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+			// B — Eb Dorian
+			c("bII", "m7", 4), c("bII", "m7", 4), c("bII", "m7", 4), c("bII", "m7", 4),
+			c("bII", "m7", 4), c("bII", "m7", 4), c("bII", "m7", 4), c("bII", "m7", 4),
+			// A
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+			c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4), c("I", "m7", 4),
+		],
 	},
 ];
 

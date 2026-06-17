@@ -377,12 +377,6 @@ describe("jazz standards", () => {
 		}
 	});
 
-	it("only public-domain tunes carry a melody", () => {
-		for (const std of STANDARDS) {
-			if (std.melodyAbc) expect(std.publicDomain).toBe(true);
-		}
-	});
-
 	it("standardToProgression preserves chord count and total beats", () => {
 		for (const std of STANDARDS) {
 			const prog = standardToProgression(std);

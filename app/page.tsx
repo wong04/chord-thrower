@@ -28,7 +28,6 @@ import { DrillControls, NextPreview } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
 import { Standards } from "@/components/Standards";
-import { AbcScore } from "@/components/AbcScore";
 import { EarTrainer } from "@/components/EarTrainer";
 import { EarMode } from "@/lib/ear/earItem";
 
@@ -331,11 +330,11 @@ export default function Home() {
 					)}
 
 					{(mode === "patterns" || mode === "standards") && !running && (
-						<PatternChart bars={chartEngine.bars} activeIndex={chartEngine.activeIndex} />
-					)}
-
-					{mode === "standards" && standard.melodyAbc && (
-						<AbcScore abc={standard.melodyAbc} homeKey={standard.homeKey} toKey={standardKey} />
+						<PatternChart
+							bars={chartEngine.bars}
+							activeIndex={chartEngine.activeIndex}
+							sections={mode === "standards" ? standard.sections : undefined}
+						/>
 					)}
 
 					<div className="zone w-full max-w-xl" style={{ animationDelay: "40ms" }}>
