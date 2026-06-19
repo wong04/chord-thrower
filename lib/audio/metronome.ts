@@ -151,7 +151,7 @@ export class Metronome {
 				const isClaveHit =
 					(claveBar === 0 && (beat === 0 || beat === 3)) ||
 					(claveBar === 1 && beat === 1);
-				if (isClaveHit) this.onRimClick?.(time, 0.7);
+				if (isClaveHit) this.onRimClick?.(time, 0.9);
 			}
 		}
 
@@ -179,7 +179,7 @@ export class Metronome {
 			const isClaveOffbeat =
 				(claveBar === 0 && this.currentBeat === 1) ||
 				(claveBar === 1 && this.currentBeat === 2);
-			if (isClaveOffbeat) this.onRimClick?.(time, 0.65);
+			if (isClaveOffbeat) this.onRimClick?.(time, 0.82);
 		}
 	}
 }

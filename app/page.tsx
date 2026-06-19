@@ -68,7 +68,7 @@ export default function Home() {
 
 	const { play: playChord, ready: chordsReady, loadError: chordsError } = useChordPlayer(audioEnabled, chordVolume, voicing);
 	const { play: playBass, ready: bassReady, loadError: bassError } = useBass(bassMode !== "off", bassVolume);
-	const { play: playRide, ready: rideReady, loadError: rideError } = useRide(subdivision !== "none", rideVolume);
+	const { play: playRide, ready: rideReady, loadError: rideError } = useRide(subdivision !== "none", rideVolume, subdivision);
 	const { play: playRimClick } = useRimClick(subdivision === "bossanova", rideVolume);
 	const secondsPerBeat = 60 / bpm;
 
