@@ -21,7 +21,7 @@ export const PROGRESSIONS: Progression[] = [
 		devices: ["ii-V", "major"],
 		description: "The atomic jazz cadence. Dm7 – G7 – Cmaj7.",
 		defaultTonic: "C",
-		chords: [c("II", "m7", 4), c("V", "7", 4), c("I", "maj7", 4)],
+		chords: [c("II", "m7", 4), c("V", "7", 4), c("I", "maj7", 8)],
 	},
 	{
 		id: "i-vi-ii-v",
@@ -59,7 +59,7 @@ export const PROGRESSIONS: Progression[] = [
 		devices: ["ii-V", "minor"],
 		description: "Minor cadence with half-diminished ii and altered V. Dm7♭5 – G7♭9 – Cm6.",
 		defaultTonic: "C",
-		chords: [c("II", "m7b5", 4), c("V", "7b9", 4), c("I", "m6", 4)],
+		chords: [c("II", "m7b5", 4), c("V", "7b9", 4), c("I", "m6", 8)],
 	},
 	{
 		id: "jazz-blues",
@@ -136,7 +136,7 @@ export const PROGRESSIONS: Progression[] = [
 		devices: ["secondary-dominant", "ii-V"],
 		description: "Secondary dominant of V tonicizes the cadence. D7 – G7 – Cmaj7.",
 		defaultTonic: "C",
-		chords: [c("II", "7", 4), c("V", "7", 4), c("I", "maj7", 4)],
+		chords: [c("II", "7", 4), c("V", "7", 4), c("I", "maj7", 8)],
 	},
 	{
 		id: "extended-dominant-chain",
@@ -160,7 +160,7 @@ export const PROGRESSIONS: Progression[] = [
 		devices: ["tritone-sub", "ii-V"],
 		description: "♭II7 replaces V for chromatic bass descent. Dm7 – D♭7 – Cmaj7.",
 		defaultTonic: "C",
-		chords: [c("II", "m7", 4), c("bII", "7", 4), c("I", "maj7", 4)],
+		chords: [c("II", "m7", 4), c("bII", "7", 4), c("I", "maj7", 8)],
 	},
 	{
 		id: "backdoor-ii-v",
@@ -169,7 +169,7 @@ export const PROGRESSIONS: Progression[] = [
 		devices: ["backdoor", "modal-interchange"],
 		description: "Resolves to I from a whole step below. Fm7 – B♭7 – Cmaj7.",
 		defaultTonic: "C",
-		chords: [c("IV", "m7", 4), c("bVII", "7", 4), c("I", "maj7", 4)],
+		chords: [c("IV", "m7", 4), c("bVII", "7", 4), c("I", "maj7", 8)],
 	},
 	{
 		id: "ladybird-turnaround",
