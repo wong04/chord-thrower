@@ -29,6 +29,8 @@ import { PatternChart } from "@/components/PatternChart";
 import { Standards } from "@/components/Standards";
 import { EarTrainer } from "@/components/EarTrainer";
 import { EarMode } from "@/lib/ear/earItem";
+import { decodeShare, ShareLinkError } from "@/lib/pattern/customProgressions";
+import { ChordParseError } from "@/lib/theory/parseProgression";
 
 type Mode = "drill" | "patterns" | "ear" | "standards";
 
@@ -94,8 +96,30 @@ export default function Home() {
 		showRoman, setShowRoman, showKeyboard, setShowKeyboard,
 		barsPerChord, setBarsPerChord, nextPreview, setNextPreview } = drillSettings;
 	const { progression, progressionId, setProgressionId, patternKey, setPatternKey,
-		keyCycle, setKeyCycle } = patternSettings;
+		keyCycle, setKeyCycle, customProgressions, saveCustom, deleteCustom } = patternSettings;
 	const { standard, standardProg, standardKey, setStandardKey, standardId, selectStandard } = standardsSettings;
+
+	// Import a progression from a share link (?prog=...) once on load.
+	const [shareError, setShareError] = useState<string | null>(null);
+	const shareHandled = useRef(false);
+	useEffect(() => {
+		if (shareHandled.current) return;
+		shareHandled.current = true;
+		const url = new URL(window.location.href);
+		const payload = url.searchParams.get("prog");
+		if (!payload) return;
+		url.searchParams.delete("prog");
+		history.replaceState(null, "", url);
+		try {
+			saveCustom(decodeShare(payload));
+			setMode("patterns");
+		} catch (e) {
+			if (!(e instanceof ShareLinkError || e instanceof ChordParseError)) throw e;
+			// The URL is only readable after mount (kept out of render to avoid SSR mismatch).
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setShareError(e.message);
+		}
+	}, [saveCustom, setMode]);
 
 	const drill = useDrill({
 		level,
@@ -297,6 +321,10 @@ export default function Home() {
 				</nav>
 			)}
 
+			{shareError && (
+				<p className="text-xs text-amber-400/80">⚠ Couldn&apos;t import shared progression: {shareError}</p>
+			)}
+
 			{mode === "ear" ? (
 				<EarTrainer
 					active={mode === "ear"}
@@ -414,6 +442,9 @@ export default function Home() {
 									onTempoRampChange={setTempoRamp}
 									rampStep={rampStep}
 									onRampStepChange={setRampStep}
+									customProgressions={customProgressions}
+									onSaveCustom={saveCustom}
+									onDeleteCustom={deleteCustom}
 								/>
 							</div>
 						))}

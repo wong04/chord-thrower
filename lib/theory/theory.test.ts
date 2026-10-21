@@ -16,6 +16,8 @@ import { STANDARDS } from "../standards/standards";
 import { standardToProgression } from "../standards/standardProgression";
 import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
+import { ChordParseError, parseChordSymbol, parseProgressionText } from "./parseProgression";
+import { customToProgression, decodeShare, encodeShare, ShareLinkError } from "../pattern/customProgressions";
 
 function progById(id: string) {
 	const p = PROGRESSIONS.find((x) => x.id === id);
@@ -391,5 +393,50 @@ describe("jazz standards", () => {
 			expect(beats(prog.chords)).toBe(beats(std.chords));
 			expect(prog.defaultTonic).toBe(std.homeKey);
 		}
+	});
+});
+
+describe("custom progression parsing", () => {
+	const beats = (cs: { beats: number }[]) => cs.map((c) => c.beats);
+
+	it("parses bars, splits beats evenly and holds with %", () => {
+		const chords = parseProgressionText("Dm7 G7 | Cmaj7 | %", "C");
+		expect(chords).toEqual([
+			{ degree: "II", quality: "m7", beats: 2 },
+			{ degree: "V", quality: "7", beats: 2 },
+			{ degree: "I", quality: "maj7", beats: 8 },
+		]);
+	});
+
+	it("round-trips symbols when written in another key", () => {
+		const prog = customToProgression({ id: "custom:x", name: "x", key: "Bb", text: "Cm7 F7 | B♭maj7 | . | E♭7 A°7 Dø G7b9" });
+		const symbols = expandProgression(prog, "Bb").map((c) => c.symbol);
+		expect(symbols).toEqual(["Cm7", "F7", "B♭maj7", "E♭7", "A°7", "Dm7♭5", "G7♭9"]);
+		expect(beats(prog.chords)).toEqual([2, 2, 8, 1, 1, 1, 1]);
+	});
+
+	it("accepts common quality aliases", () => {
+		expect(parseChordSymbol("C-7").quality).toBe("m7");
+		expect(parseChordSymbol("CΔ").quality).toBe("maj7");
+		expect(parseChordSymbol("Cø").quality).toBe("m7b5");
+		expect(parseChordSymbol("C6/9").quality).toBe("69");
+		expect(parseChordSymbol("F♯7alt")).toEqual({ root: "F#", quality: "7alt" });
+		expect(parseChordSymbol("Eb").quality).toBe("maj");
+	});
+
+	it("rejects bad input with a ChordParseError", () => {
+		expect(() => parseChordSymbol("Cfoo")).toThrow(ChordParseError);
+		expect(() => parseChordSymbol("H7")).toThrow(ChordParseError);
+		expect(() => parseProgressionText("C D E", "C")).toThrow(/bar 1/);
+		expect(() => parseProgressionText("% | C", "C")).toThrow(ChordParseError);
+		expect(() => parseProgressionText("   ", "C")).toThrow(ChordParseError);
+		expect(() => parseProgressionText("C | Cfoo", "C")).toThrow(/bar 2/);
+	});
+
+	it("share links round-trip and reject garbage", () => {
+		const cp = { id: "custom:abc", name: "My tune ♭", key: "Eb", text: "Fm7 B♭7 | E♭maj7" };
+		const decoded = decodeShare(encodeShare(cp));
+		expect({ name: decoded.name, key: decoded.key, text: decoded.text }).toEqual({ name: cp.name, key: cp.key, text: cp.text });
+		expect(() => decodeShare("not-a-link!!")).toThrow(ShareLinkError);
 	});
 });
