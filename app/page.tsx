@@ -19,8 +19,11 @@ import { useStandardsSettings } from "@/lib/standards/useStandardsSettings";
 import { Instrument } from "@/lib/theory/transpose";
 import { scaleForChord, chordTones } from "@/lib/theory/scales";
 import { MAX_BPM, MIN_BPM, TransportControls } from "@/components/TransportControls";
-import { Mixer, MixerProps } from "@/components/Mixer";
-import { MixerSheet } from "@/components/MixerSheet";
+import { MixerProps } from "@/components/Mixer";
+import { DrawerTab, SettingsDrawer } from "@/components/SettingsDrawer";
+import { GeneralSettings } from "@/components/GeneralSettings";
+import { TempoRamp } from "@/components/TempoRamp";
+import { Segmented } from "@/components/controls";
 import { ChordDisplay } from "@/components/ChordDisplay";
 import { Keyboard } from "@/components/Keyboard";
 import { DrillControls } from "@/components/DrillControls";
@@ -33,12 +36,24 @@ import { decodeShare, ShareLinkError } from "@/lib/pattern/customProgressions";
 import { ChordParseError } from "@/lib/theory/parseProgression";
 
 type Mode = "drill" | "patterns" | "ear" | "standards";
+type PlayMode = Exclude<Mode, "ear">;
+
+const PLAY_MODES: [PlayMode, string][] = [
+	["drill", "Drill"],
+	["patterns", "Patterns"],
+	["standards", "Standards"],
+];
 
 const clampBpm = (bpm: number) => Math.max(MIN_BPM, Math.min(MAX_BPM, bpm));
 
 export default function Home() {
 	const [mode, setMode] = usePersistentState<Mode>("mode", "drill");
-	const [mixerOpen, setMixerOpen] = useState(false);
+	const [lastPlayMode, setLastPlayMode] = usePersistentState<PlayMode>("lastPlayMode", "drill");
+	const [drawer, setDrawer] = useState<DrawerTab | null>(null);
+	const selectPlayMode = (m: PlayMode) => {
+		setMode(m);
+		setLastPlayMode(m);
+	};
 
 	// Shared / transport settings
 	const [bpm, setBpm] = usePersistentState("bpm", 100);
@@ -113,13 +128,14 @@ export default function Home() {
 		try {
 			saveCustom(decodeShare(payload));
 			setMode("patterns");
+			setLastPlayMode("patterns");
 		} catch (e) {
 			if (!(e instanceof ShareLinkError || e instanceof ChordParseError)) throw e;
 			// The URL is only readable after mount (kept out of render to avoid SSR mismatch).
 			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setShareError(e.message);
 		}
-	}, [saveCustom, setMode]);
+	}, [saveCustom, setMode, setLastPlayMode]);
 
 	const drill = useDrill({
 		level,
@@ -192,7 +208,7 @@ export default function Home() {
 	};
 
 	// Keyboard shortcuts: Space = start/stop, ↑/↓ = tempo, F = fullscreen, Esc = exit fullscreen.
-	const mainRef = useRef<HTMLElement>(null);
+	const mainRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef(handleToggle);
 	useEffect(() => {
 		toggleRef.current = handleToggle;
@@ -295,191 +311,181 @@ export default function Home() {
 			</div>
 		);
 
-	return (
-		<main ref={mainRef} className="flex flex-1 flex-col items-center gap-8 bg-background px-4 py-8">
-			{!running && (
-				<header className="zone text-center">
-					<h1 className="font-display text-3xl font-semibold tracking-tight">Chord Thrower</h1>
-					<p className="mt-1 text-sm text-muted">Drill chords and jazz patterns in time.</p>
-				</header>
-			)}
-
-			{!running && (
-				<nav className="zone inline-flex rounded-full border border-rule bg-surface/50 p-1">
-					<TabButton active={mode === "drill"} onClick={() => setMode("drill")}>
-						Drill
-					</TabButton>
-					<TabButton active={mode === "patterns"} onClick={() => setMode("patterns")}>
-						Patterns
-					</TabButton>
-					<TabButton active={mode === "standards"} onClick={() => setMode("standards")}>
-						Standards
-					</TabButton>
-					<TabButton active={mode === "ear"} onClick={() => setMode("ear")}>
-						Ear
-					</TabButton>
-				</nav>
-			)}
-
-			{shareError && (
-				<p className="text-xs text-amber-800">⚠ Couldn&apos;t import shared progression: {shareError}</p>
-			)}
-
-			{mode === "ear" ? (
-				<EarTrainer
-					active={mode === "ear"}
-					mode={earMode}
-					onModeChange={setEarMode}
+	const practiceSettings =
+		mode === "drill" ? (
+			<>
+				<DrillControls
 					level={level}
 					onLevelChange={setLevel}
 					keyChoice={keyChoice}
 					onKeyChange={setKeyChoice}
 					tonality={tonality}
 					onTonalityChange={setTonality}
+					showRoman={showRoman}
+					onShowRomanChange={setShowRoman}
+					showKeyboard={showKeyboard}
+					onShowKeyboardChange={setShowKeyboard}
+					barsPerChord={barsPerChord}
+					onBarsChange={setBarsPerChord}
+					nextPreview={nextPreview}
+					onNextPreviewChange={setNextPreview}
 				/>
-			) : (
-				<>
-					{hero}
+				<TempoRamp
+					label="Ramp tempo each chord"
+					tempoRamp={tempoRamp}
+					onTempoRampChange={setTempoRamp}
+					rampStep={rampStep}
+					onRampStepChange={setRampStep}
+				/>
+			</>
+		) : mode === "patterns" ? (
+			<>
+				<PatternControls
+					progressionId={progressionId}
+					onProgressionChange={setProgressionId}
+					keyCycle={keyCycle}
+					onKeyCycleChange={setKeyCycle}
+					customProgressions={customProgressions}
+					onSaveCustom={saveCustom}
+					onDeleteCustom={deleteCustom}
+				/>
+				<TempoRamp
+					label="Ramp tempo each rep"
+					tempoRamp={tempoRamp}
+					onTempoRampChange={setTempoRamp}
+					rampStep={rampStep}
+					onRampStepChange={setRampStep}
+				/>
+			</>
+		) : (
+			<Standards standard={standard} selectedId={standardId} onSelect={selectStandard} />
+		);
 
-					{mode === "drill" && showKeyboard && drill.current && !metronome.counting && (
-						<div className="flex w-full max-w-xl flex-col items-center gap-2">
-							<Keyboard
-								chordTones={chordTones(drill.current.root, drill.current.quality)}
-								scaleNotes={scaleForChord(drill.current.root, drill.current.quality).notes}
-							/>
-							<div className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
-								{scaleForChord(drill.current.root, drill.current.quality).name}
+	const keySelect =
+		mode === "patterns"
+			? { value: patternKey, onChange: setPatternKey }
+			: mode === "standards"
+				? { value: standardKey, onChange: setStandardKey }
+				: undefined;
+
+	return (
+		<div ref={mainRef} className="flex min-h-dvh flex-col bg-background">
+			{!running && (
+				<header className="zone mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pt-5">
+					<h1 className="font-display text-2xl">Chord Thrower</h1>
+					{mode === "ear" ? (
+						<button
+							type="button"
+							onClick={() => setMode(lastPlayMode)}
+							className="text-sm text-muted transition-colors hover:text-foreground"
+						>
+							← Back to playing
+						</button>
+					) : (
+						<>
+							<div className="order-last flex w-full justify-center sm:order-none sm:w-auto">
+								<Segmented value={mode} onChange={selectPlayMode} options={PLAY_MODES} ariaLabel="Practice mode" />
 							</div>
-						</div>
+							<button
+								type="button"
+								onClick={() => setMode("ear")}
+								className="text-sm text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
+							>
+								Ear training
+							</button>
+						</>
 					)}
+				</header>
+			)}
 
-					{(mode === "patterns" || mode === "standards") && !running && (
-						<PatternChart
-							bars={chartEngine.bars}
-							activeIndex={chartEngine.activeIndex}
-							sections={mode === "standards" ? standard.sections : undefined}
-						/>
-					)}
+			<main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-8 px-4 py-8">
+				{shareError && (
+					<p className="text-xs text-amber-800">⚠ Couldn&apos;t import shared progression: {shareError}</p>
+				)}
 
-					<div className="zone w-full max-w-xl" style={{ animationDelay: "40ms" }}>
-						<TransportControls
-							running={running}
-							onToggle={handleToggle}
-							bpm={bpm}
-							onBpmChange={setBpm}
+				{mode === "ear" ? (
+					<EarTrainer
+						active={mode === "ear"}
+						mode={earMode}
+						onModeChange={setEarMode}
+						level={level}
+						onLevelChange={setLevel}
+						keyChoice={keyChoice}
+						onKeyChange={setKeyChoice}
+						tonality={tonality}
+						onTonalityChange={setTonality}
+					/>
+				) : (
+					<>
+						{hero}
+
+						{mode === "drill" && showKeyboard && drill.current && !metronome.counting && (
+							<div className="flex w-full max-w-xl flex-col items-center gap-2">
+								<Keyboard
+									chordTones={chordTones(drill.current.root, drill.current.quality)}
+									scaleNotes={scaleForChord(drill.current.root, drill.current.quality).notes}
+								/>
+								<div className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+									{scaleForChord(drill.current.root, drill.current.quality).name}
+								</div>
+							</div>
+						)}
+
+						{(mode === "patterns" || mode === "standards") && !running && (
+							<PatternChart
+								bars={chartEngine.bars}
+								activeIndex={chartEngine.activeIndex}
+								sections={mode === "standards" ? standard.sections : undefined}
+							/>
+						)}
+
+						{audioLoadError && (
+							<p className="text-xs text-amber-800">
+								⚠ Some audio samples failed to load — check your connection and refresh.
+							</p>
+						)}
+					</>
+				)}
+			</main>
+
+			{mode !== "ear" && (
+				<footer className="sticky bottom-0 z-30 border-t border-rule bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+					<TransportControls
+						running={running}
+						onToggle={handleToggle}
+						bpm={bpm}
+						onBpmChange={setBpm}
+						beatsPerBar={beatsPerBar}
+						beat={metronome.beat}
+						counting={metronome.counting}
+						chordsLoading={chordsLoading}
+						keySelect={keySelect}
+						onOpenPractice={() => setDrawer("practice")}
+						onOpenSound={() => setDrawer("sound")}
+					/>
+				</footer>
+			)}
+
+			<SettingsDrawer
+				tab={drawer}
+				onTabChange={setDrawer}
+				onClose={() => setDrawer(null)}
+				mixer={mixerProps}
+				practice={
+					<div className="flex flex-col gap-6">
+						{practiceSettings}
+						<hr className="border-rule" />
+						<GeneralSettings
+							instrument={instrument}
+							onInstrumentChange={setInstrument}
 							beatsPerBar={beatsPerBar}
 							onBeatsPerBarChange={setBeatsPerBar}
 							countIn={countIn}
 							onCountInChange={setCountIn}
-							beat={metronome.beat}
-							counting={metronome.counting}
-							chordsLoading={chordsLoading}
-							compact={running}
-							onOpenMixer={() => setMixerOpen(true)}
 						/>
 					</div>
-
-					{audioLoadError && (
-						<p className="text-xs text-amber-800">
-							⚠ Some audio samples failed to load — check your connection and refresh.
-						</p>
-					)}
-
-					{!running && (
-						<div className="zone w-full max-w-xl" style={{ animationDelay: "100ms" }}>
-							<Mixer {...mixerProps} />
-						</div>
-					)}
-
-					{!running &&
-						(mode === "standards" ? (
-							<div className="zone w-full max-w-xl" style={{ animationDelay: "160ms" }}>
-								<Standards
-									standard={standard}
-									selectedId={standardId}
-									onSelect={selectStandard}
-									standardKey={standardKey}
-									onKeyChange={setStandardKey}
-								/>
-							</div>
-						) : mode === "drill" ? (
-							<div className="zone w-full max-w-xl" style={{ animationDelay: "160ms" }}>
-								<DrillControls
-									level={level}
-									onLevelChange={setLevel}
-									keyChoice={keyChoice}
-									onKeyChange={setKeyChoice}
-									tonality={tonality}
-									onTonalityChange={setTonality}
-									showRoman={showRoman}
-									onShowRomanChange={setShowRoman}
-									showKeyboard={showKeyboard}
-									onShowKeyboardChange={setShowKeyboard}
-									barsPerChord={barsPerChord}
-									onBarsChange={setBarsPerChord}
-									instrument={instrument}
-									onInstrumentChange={setInstrument}
-									nextPreview={nextPreview}
-									onNextPreviewChange={setNextPreview}
-									tempoRamp={tempoRamp}
-									onTempoRampChange={setTempoRamp}
-									rampStep={rampStep}
-									onRampStepChange={setRampStep}
-								/>
-							</div>
-						) : (
-							<div className="zone w-full max-w-xl" style={{ animationDelay: "160ms" }}>
-								<PatternControls
-									progressionId={progressionId}
-									onProgressionChange={setProgressionId}
-									patternKey={patternKey}
-									onPatternKeyChange={setPatternKey}
-									keyCycle={keyCycle}
-									onKeyCycleChange={setKeyCycle}
-									instrument={instrument}
-									onInstrumentChange={setInstrument}
-									tempoRamp={tempoRamp}
-									onTempoRampChange={setTempoRamp}
-									rampStep={rampStep}
-									onRampStepChange={setRampStep}
-									customProgressions={customProgressions}
-									onSaveCustom={saveCustom}
-									onDeleteCustom={deleteCustom}
-								/>
-							</div>
-						))}
-
-					{!running && (
-						<p className="text-xs text-muted/70">
-							Space start/stop · ↑↓ tempo · F fullscreen · Esc exit
-						</p>
-					)}
-				</>
-			)}
-
-			<MixerSheet open={mixerOpen} onClose={() => setMixerOpen(false)} mixer={mixerProps} />
-		</main>
-	);
-}
-
-function TabButton({
-	active,
-	onClick,
-	children,
-}: {
-	active: boolean;
-	onClick: () => void;
-	children: React.ReactNode;
-}) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-				active ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
-			}`}
-		>
-			{children}
-		</button>
+				}
+			/>
+		</div>
 	);
 }

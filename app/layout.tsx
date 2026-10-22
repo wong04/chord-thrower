@@ -38,9 +38,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        <footer className="px-4 py-6 text-center text-xs text-foreground/40">
-          Chord Thrower — chord drills, jazz patterns &amp; metronome for improvisers.
-        </footer>
       </body>
     </html>
   );

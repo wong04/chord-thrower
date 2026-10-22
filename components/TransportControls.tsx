@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { KEYS } from "@/lib/theory/transpose";
 import { MetronomeIndicator } from "./MetronomeIndicator";
 
 export const TIME_SIGNATURES: { label: string; beatsPerBar: number }[] = [
@@ -21,21 +22,19 @@ export type TransportProps = {
 	bpm: number;
 	onBpmChange: (bpm: number) => void;
 	beatsPerBar: number;
-	onBeatsPerBarChange: (beats: number) => void;
-	countIn: boolean;
-	onCountInChange: (enabled: boolean) => void;
 	beat: number;
 	counting: boolean;
 	/** True while any instrument's samples are still loading. */
 	chordsLoading?: boolean;
-	/** Slim bar for focus mode. */
-	compact?: boolean;
-	/** Open the mixer sheet (compact mode only). */
-	onOpenMixer?: () => void;
+	/** Quick key picker for chart modes; omitted in drill. */
+	keySelect?: { value: string; onChange: (key: string) => void };
+	onOpenPractice: () => void;
+	onOpenSound: () => void;
 };
 
+/** The always-visible bottom bar: start/stop, tempo, beat dots, key, and drawer shortcuts. */
 export function TransportControls(props: TransportProps) {
-	const { running, onToggle, bpm, onBpmChange, beatsPerBar, beat, counting, compact } = props;
+	const { running, onToggle, bpm, onBpmChange, beatsPerBar, beat, counting, keySelect } = props;
 
 	const tapsRef = useRef<number[]>([]);
 	const onTap = () => {
@@ -53,117 +52,99 @@ export function TransportControls(props: TransportProps) {
 	};
 
 	const isLoading = !running && !!props.chordsLoading;
-	const startStop = (
-		<button
-			type="button"
-			onClick={onToggle}
-			disabled={isLoading}
-			className={`min-h-[44px] rounded-full px-7 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
-				running
-					? "bg-surface text-foreground hover:bg-foreground/10"
-					: isLoading
-						? "bg-accent/40 text-on-accent/60 cursor-not-allowed"
-						: "bg-accent text-on-accent hover:brightness-110"
-			}`}
-		>
-			{running ? "Stop" : "▸ Start"}
-		</button>
-	);
-
-	if (compact) {
-		return (
-			<div className="flex w-full max-w-xl flex-wrap items-center justify-between gap-4 rounded-full border border-rule bg-surface/60 px-5 py-3 backdrop-blur">
-				{startStop}
-				<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
-				<div className="flex items-baseline gap-1.5">
-					<BpmInput
-						bpm={bpm}
-						onBpmChange={onBpmChange}
-						className="w-[3.5ch] bg-transparent text-center font-mono text-2xl tabular-nums caret-accent outline-none focus:text-accent"
-					/>
-					<span className="text-xs uppercase tracking-widest text-muted">bpm</span>
-				</div>
-				<button
-					type="button"
-					onClick={props.onOpenMixer}
-					className="min-h-[44px] rounded-full border border-rule px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
-				>
-					≡ Mixer
-				</button>
-			</div>
-		);
-	}
 
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-6 rounded-3xl border border-rule bg-surface/50 p-6">
-			{/* BPM hero */}
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div className="flex items-baseline gap-2">
+		<div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+			<button
+				type="button"
+				onClick={onToggle}
+				disabled={isLoading}
+				aria-label={running ? "Stop" : "Start"}
+				className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg transition-colors ${
+					running
+						? "bg-foreground text-background"
+						: isLoading
+							? "cursor-not-allowed bg-accent/40 text-on-accent/60"
+							: "bg-accent text-on-accent hover:brightness-110"
+				}`}
+			>
+				{running ? "■" : "▶"}
+			</button>
+
+			<div className="flex items-center gap-1">
+				<StepButton label="Slower" onClick={() => onBpmChange(clampBpm(bpm - 1))}>
+					−
+				</StepButton>
+				<div className="flex items-baseline gap-1">
 					<BpmInput
 						bpm={bpm}
 						onBpmChange={onBpmChange}
-						className="w-[3.5ch] bg-transparent text-center font-mono text-6xl leading-none tabular-nums caret-accent outline-none focus:text-accent"
+						className="w-[3.2ch] bg-transparent text-center font-mono text-2xl tabular-nums caret-accent outline-none focus:text-accent"
 					/>
-					<span className="text-sm uppercase tracking-[0.2em] text-muted">bpm</span>
+					<span className="text-[10px] uppercase tracking-widest text-muted">bpm</span>
 				</div>
-				<div className="flex items-center gap-3">
-					<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
-					<button
-						type="button"
-						onClick={onTap}
-						className="min-h-[44px] rounded-full border border-rule px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
-					>
-						Tap
-					</button>
-				</div>
+				<StepButton label="Faster" onClick={() => onBpmChange(clampBpm(bpm + 1))}>
+					+
+				</StepButton>
+				<button
+					type="button"
+					onClick={onTap}
+					className="ml-1 rounded-full border border-rule px-3 py-1 text-xs text-muted transition-colors hover:text-foreground"
+				>
+					Tap
+				</button>
 			</div>
 
-			<input
-				type="range"
-				min={MIN_BPM}
-				max={MAX_BPM}
-				value={bpm}
-				onChange={(e) => onBpmChange(Number(e.target.value))}
-				aria-label="Tempo"
-				className="fader w-full accent-accent"
-			/>
+			<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
 
-			{/* Primary action */}
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				{startStop}
-				{props.chordsLoading && <span className="text-xs text-muted">loading sounds…</span>}
-			</div>
+			{isLoading && <span className="text-xs text-muted">loading sounds…</span>}
 
-			{/* Meter + count-in */}
-			<div className="flex flex-wrap items-center gap-3">
-				<span className="w-20 shrink-0 text-sm text-muted">Time</span>
-				<div className="inline-flex rounded-full border border-rule p-0.5">
-					{TIME_SIGNATURES.map((ts) => (
-						<button
-							key={ts.label}
-							type="button"
-							onClick={() => props.onBeatsPerBarChange(ts.beatsPerBar)}
-							className={`min-h-[36px] rounded-full px-3 py-1.5 text-sm transition-colors ${
-								beatsPerBar === ts.beatsPerBar
-									? "bg-accent text-on-accent"
-									: "text-muted hover:text-foreground"
-							}`}
+			<div className="ml-auto flex items-center gap-2">
+				{keySelect && (
+					<label className="flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted">
+						Key
+						<select
+							value={keySelect.value}
+							onChange={(e) => keySelect.onChange(e.target.value)}
+							className="rounded-lg border border-rule bg-background px-2 py-1 font-display text-base normal-case tracking-normal text-foreground"
 						>
-							{ts.label}
-						</button>
-					))}
-				</div>
-				<label className="ml-auto flex items-center gap-2 text-sm text-muted">
-					<input
-						type="checkbox"
-						checked={props.countIn}
-						onChange={(e) => props.onCountInChange(e.target.checked)}
-						className="h-4 w-4 accent-accent"
-					/>
-					Count-in
-				</label>
+							{KEYS.map((k) => (
+								<option key={k} value={k}>
+									{k}
+								</option>
+							))}
+						</select>
+					</label>
+				)}
+				<BarButton onClick={props.onOpenPractice}>Settings</BarButton>
+				<BarButton onClick={props.onOpenSound}>Mix</BarButton>
 			</div>
 		</div>
+	);
+}
+
+function StepButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			aria-label={label}
+			className="grid h-8 w-8 place-items-center rounded-full text-lg text-muted transition-colors hover:bg-foreground/5 hover:text-foreground"
+		>
+			{children}
+		</button>
+	);
+}
+
+function BarButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className="min-h-[36px] rounded-full border border-rule px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground"
+		>
+			{children}
+		</button>
 	);
 }
 

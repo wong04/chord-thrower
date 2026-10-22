@@ -1,46 +1,25 @@
 "use client";
 
-import { KEYS } from "@/lib/theory/transpose";
 import { Standard } from "@/lib/standards/standards";
 import { StandardsBrowser } from "./StandardsBrowser";
 
-/** Standards setup panel: pick a tune and a key. Shown when stopped. */
+/** Standards setup panel: pick a tune. The key lives in the transport bar. */
 export function Standards({
 	standard,
 	selectedId,
 	onSelect,
-	standardKey,
-	onKeyChange,
 }: {
 	standard: Standard;
 	selectedId: string;
 	onSelect: (std: Standard) => void;
-	standardKey: string;
-	onKeyChange: (key: string) => void;
 }) {
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-4">
+		<div className="flex w-full flex-col gap-3">
+			<p className="text-sm text-muted">
+				<span className="font-display text-lg text-foreground">{standard.title}</span> · {standard.composer},{" "}
+				{standard.year}
+			</p>
 			<StandardsBrowser selectedId={selectedId} onSelect={onSelect} />
-
-			<div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rule bg-surface/50 p-4">
-				<label className="flex items-center gap-2 text-sm text-muted">
-					Key
-					<select
-						value={standardKey}
-						onChange={(e) => onKeyChange(e.target.value)}
-						className="rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
-					>
-						{KEYS.map((k) => (
-							<option key={k} value={k}>
-								{k}
-							</option>
-						))}
-					</select>
-				</label>
-				<span className="ml-auto text-xs text-muted">
-					{standard.composer} · {standard.year}
-				</span>
-			</div>
 		</div>
 	);
 }
