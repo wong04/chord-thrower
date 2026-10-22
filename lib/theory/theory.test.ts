@@ -18,6 +18,7 @@ import { expandProgression } from "./progressionEngine";
 import { PROGRESSIONS } from "./progressions";
 import { ChordParseError, parseChordSymbol, parseProgressionText } from "./parseProgression";
 import { customToProgression, decodeShare, encodeShare, ShareLinkError } from "../pattern/customProgressions";
+import { groupIntoBars } from "../pattern/bars";
 
 function progById(id: string) {
 	const p = PROGRESSIONS.find((x) => x.id === id);
@@ -438,5 +439,26 @@ describe("custom progression parsing", () => {
 		const decoded = decodeShare(encodeShare(cp));
 		expect({ name: decoded.name, key: decoded.key, text: decoded.text }).toEqual({ name: cp.name, key: cp.key, text: cp.text });
 		expect(() => decodeShare("not-a-link!!")).toThrow(ShareLinkError);
+	});
+});
+
+describe("chart bars line up with beat position", () => {
+	it("bar floor(beat/4) holds the chord sounding at that beat, for every standard in every key", () => {
+		for (const std of STANDARDS) {
+			for (const key of KEYS) {
+				const chords = expandProgression(standardToProgression(std), key);
+				const bars = groupIntoBars(chords);
+				let beat = 0;
+				chords.forEach((chord, i) => {
+					for (let b = beat; b < beat + chord.beats; b++) {
+						const bar = bars[Math.floor(b / 4)];
+						const holds = bar.continuation ? bar.startIndex === i : bar.chords.includes(chord);
+						expect(holds, `${std.id} in ${key}: beat ${b}`).toBe(true);
+					}
+					beat += chord.beats;
+				});
+				expect(bars.length).toBe(Math.ceil(beat / 4));
+			}
+		}
 	});
 });

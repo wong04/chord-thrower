@@ -6,6 +6,7 @@ import { Note } from "tonal";
 import { Tick } from "@/lib/audio/metronome";
 import { Instrument, KEYS } from "@/lib/theory/transpose";
 import { expandProgression, Progression, ResolvedChord } from "@/lib/theory/progressionEngine";
+import { Bar, BEATS_PER_BAR, groupIntoBars } from "./bars";
 
 export type KeyCycle = "lock" | "cycle4" | "random";
 
@@ -29,20 +30,14 @@ export type PatternSettings = {
 	) => void;
 };
 
-export type Bar = {
-	chords: ResolvedChord[];
-	/** Index of the first chord in this bar (into the flat chords array). */
-	startIndex: number;
-	/** True when this bar is a visual continuation of a multi-bar chord above it. */
-	continuation?: boolean;
-};
-
 export type PatternState = {
 	/** Concert key the pattern is currently sounding in. */
 	tonic: string;
 	chords: ResolvedChord[];
 	bars: Bar[];
 	activeIndex: number;
+	/** Index into `bars` of the bar currently sounding (tracks held chords too). */
+	activeBar: number;
 	onTick: (tick: Tick) => void;
 	reset: () => void;
 };
@@ -59,33 +54,6 @@ function nextTonic(current: string, cycle: KeyCycle): string {
 	let pick = current;
 	while (pick === current) pick = KEYS[Math.floor(Math.random() * KEYS.length)];
 	return pick;
-}
-
-/** Group a flat chord list into 4-beat bars for the chart display. */
-function groupIntoBars(chords: ResolvedChord[]): Bar[] {
-	const bars: Bar[] = [];
-	let bar: ResolvedChord[] = [];
-	let beats = 0;
-	let startIndex = 0;
-	chords.forEach((chord, i) => {
-		if (bar.length === 0) startIndex = i;
-		bar.push(chord);
-		beats += chord.beats;
-		if (beats >= 4) {
-			bars.push({ chords: bar, startIndex });
-			bar = [];
-			// For chords that span multiple bars (e.g. 8-beat bridge chords),
-			// emit continuation placeholders so section labels stay aligned.
-			let extra = beats - 4;
-			while (extra >= 4) {
-				bars.push({ chords: [], startIndex: i, continuation: true });
-				extra -= 4;
-			}
-			beats = extra;
-		}
-	});
-	if (bar.length) bars.push({ chords: bar, startIndex });
-	return bars;
 }
 
 /** Drives pattern practice: walks a progression in time, cycling keys per rep. */
@@ -115,6 +83,7 @@ export function usePattern(settings: PatternSettings): PatternState {
 
 	const [tonic, setTonic] = useState(settings.tonic);
 	const [activeIndex, setActiveIndex] = useState(0);
+	const [activeBar, setActiveBar] = useState(0);
 	const beatRef = useRef(0);
 
 	// Reset to the chosen home key whenever the pattern or key changes (render-phase
@@ -125,6 +94,7 @@ export function usePattern(settings: PatternSettings): PatternState {
 		setPrevSig(resetSig);
 		setTonic(settings.tonic);
 		setActiveIndex(0);
+		setActiveBar(0);
 	}
 
 	const chords = useMemo(
@@ -158,6 +128,7 @@ export function usePattern(settings: PatternSettings): PatternState {
 		beatRef.current = 0;
 		lastIdxRef.current = -1;
 		setActiveIndex(0);
+		setActiveBar(0);
 		setTonic(baseTonicRef.current);
 	}, []);
 
@@ -186,7 +157,11 @@ export function usePattern(settings: PatternSettings): PatternState {
 		}
 
 		// Defer the highlight move to land on the beat, not at look-ahead.
-		Tone.getDraw().schedule(() => setActiveIndex(idx), tick.time);
+		const bar = Math.floor(pos / BEATS_PER_BAR);
+		Tone.getDraw().schedule(() => {
+			setActiveIndex(idx);
+			setActiveBar(bar);
+		}, tick.time);
 
 		beatRef.current += 1;
 		if (beatRef.current >= totalRef.current) {
@@ -196,5 +171,5 @@ export function usePattern(settings: PatternSettings): PatternState {
 		}
 	}, []);
 
-	return { tonic, chords, bars, activeIndex, onTick, reset };
+	return { tonic, chords, bars, activeIndex, activeBar, onTick, reset };
 }

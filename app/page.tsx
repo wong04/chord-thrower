@@ -29,6 +29,7 @@ import { Keyboard } from "@/components/Keyboard";
 import { DrillControls } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
+import { ChartHeader } from "@/components/ChartHeader";
 import { Standards } from "@/components/Standards";
 import { EarTrainer } from "@/components/EarTrainer";
 import { EarMode } from "@/lib/ear/earItem";
@@ -278,14 +279,30 @@ export default function Home() {
 	// Hero content per mode. Patterns + Standards share the chart-playing engine.
 	const chartEngine = mode === "standards" ? standards : pattern;
 	const chartActive = chartEngine.chords[chartEngine.activeIndex];
+	const chartNext = chartEngine.chords[(chartEngine.activeIndex + 1) % (chartEngine.chords.length || 1)];
 	const drillShowNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
-	let chartBar = 0;
-	chartEngine.bars.forEach((b, i) => {
-		if (chartEngine.activeIndex >= b.startIndex) chartBar = i;
-	});
 
+	// Standards: the full chart is the stage (iReal-style), with a compact now/next strip.
 	const hero =
-		mode === "drill" ? (
+		mode === "standards" ? (
+			<>
+				<ChartHeader
+					symbol={chartActive?.symbol ?? null}
+					nextSymbol={chartNext?.symbol}
+					countdown={countdown}
+					title={standard.title}
+					tonic={standards.tonic}
+					bar={standards.activeBar}
+					barCount={standards.bars.length}
+				/>
+				<PatternChart
+					bars={standards.bars}
+					activeIndex={standards.activeIndex}
+					activeBar={standards.activeBar}
+					sections={standard.sections}
+				/>
+			</>
+		) : mode === "drill" ? (
 			<ChordDisplay
 				symbol={drill.current?.symbol ?? null}
 				nextSymbol={drill.next?.symbol}
@@ -299,14 +316,13 @@ export default function Home() {
 			<div className="flex flex-col items-center gap-3">
 				<ChordDisplay
 					symbol={chartActive?.symbol ?? null}
-					nextSymbol={chartEngine.chords[(chartEngine.activeIndex + 1) % (chartEngine.chords.length || 1)]?.symbol}
+					nextSymbol={chartNext?.symbol}
 					showNext
 					countdown={countdown}
 					focused={running}
 				/>
 				<div className="text-center text-sm text-muted">
-					{mode === "standards" ? standard.title : progression.name} · key of {chartEngine.tonic} · bar{" "}
-					{chartBar + 1}/{chartEngine.bars.length}
+					{progression.name} · key of {chartEngine.tonic} · bar {chartEngine.activeBar + 1}/{chartEngine.bars.length}
 				</div>
 			</div>
 		);
@@ -398,7 +414,11 @@ export default function Home() {
 				</header>
 			)}
 
-			<main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-8 px-4 py-8">
+			<main
+				className={`mx-auto flex w-full max-w-3xl flex-1 flex-col items-center px-4 py-8 ${
+					mode === "standards" ? "justify-start gap-6" : "justify-center gap-8"
+				}`}
+			>
 				{shareError && (
 					<p className="text-xs text-amber-800">⚠ Couldn&apos;t import shared progression: {shareError}</p>
 				)}
@@ -431,12 +451,8 @@ export default function Home() {
 							</div>
 						)}
 
-						{(mode === "patterns" || mode === "standards") && !running && (
-							<PatternChart
-								bars={chartEngine.bars}
-								activeIndex={chartEngine.activeIndex}
-								sections={mode === "standards" ? standard.sections : undefined}
-							/>
+						{mode === "patterns" && !running && (
+							<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} activeBar={pattern.activeBar} />
 						)}
 
 						{audioLoadError && (

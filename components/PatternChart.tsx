@@ -1,38 +1,52 @@
 "use client";
 
-import React from "react";
-import { Bar } from "@/lib/pattern/usePattern";
+import React, { useEffect, useRef } from "react";
+import { Bar } from "@/lib/pattern/bars";
 
-/** Lead-sheet style chord chart: barlines, hand-lettered symbols, boxed rehearsal marks. */
+/** Lead-sheet style chord chart: 4 bars a line, hand-lettered symbols, boxed rehearsal marks. */
 export function PatternChart({
 	bars,
 	activeIndex,
+	activeBar,
 	sections,
 }: {
 	bars: Bar[];
 	activeIndex: number;
+	/** Bar currently sounding — washed red and kept scrolled into view. */
+	activeBar: number;
 	sections?: Array<{ bar: number; label: string }>;
 }) {
 	const sectionMap = new Map(sections?.map((s) => [s.bar, s.label]));
+	const activeRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		activeRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+	}, [activeBar]);
 
 	return (
-		<div className="grid w-full max-w-2xl grid-cols-2 gap-y-5 pl-px sm:grid-cols-4">
+		<div className="grid w-full max-w-2xl grid-cols-4 gap-y-4 pl-px sm:gap-y-5">
 			{bars.map((bar, barIdx) => {
 				const sectionLabel = sectionMap.get(barIdx);
+				const isActiveBar = barIdx === activeBar;
 				return (
 					<React.Fragment key={barIdx}>
 						{sectionLabel && (
-							<div className="col-span-2 -mb-3 sm:col-span-4">
+							<div className="col-span-4 -mb-2 sm:-mb-3">
 								<span className="inline-block border-[1.5px] border-foreground px-1.5 font-display text-base leading-tight">
 									{sectionLabel}
 								</span>
 							</div>
 						)}
 						{/* Both edges + a 1px overlap, so neighbouring barlines merge and each row closes itself. */}
-						<div className="-ml-px flex h-14 items-end gap-2 border-x border-foreground/60 px-2.5 pb-1.5">
+						<div
+							ref={isActiveBar ? activeRef : undefined}
+							className={`-ml-px flex h-12 scroll-my-24 items-end gap-1 border-x border-foreground/60 px-1.5 pb-1.5 sm:h-14 sm:gap-2 sm:px-2.5 ${
+								isActiveBar ? "bg-accent/10" : ""
+							}`}
+						>
 							{bar.continuation ? (
 								<span
-									className={`font-display text-xl ${
+									className={`font-display text-[15px] sm:text-xl ${
 										bar.startIndex === activeIndex ? "text-accent/70" : "text-foreground/30"
 									}`}
 								>
@@ -44,7 +58,8 @@ export function PatternChart({
 									return (
 										<span
 											key={i}
-											className={`flex-1 truncate font-display text-xl leading-none transition-colors ${
+											style={{ flexGrow: chord.beats, flexBasis: 0 }}
+											className={`min-w-0 truncate font-display text-[15px] leading-none sm:text-xl ${
 												active
 													? "text-accent underline decoration-2 underline-offset-[3px]"
 													: "text-foreground/85"
