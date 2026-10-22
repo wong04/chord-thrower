@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { Bar } from "@/lib/pattern/bars";
+import { ChordSymbol } from "./ChordSymbol";
 
 /** Lead-sheet style chord chart: 4 bars a line, hand-lettered symbols, boxed rehearsal marks. */
 export function PatternChart({
@@ -55,17 +56,19 @@ export function PatternChart({
 							) : (
 								bar.chords.map((chord, i) => {
 									const active = bar.startIndex + i === activeIndex;
+									// Split bars shrink on phones (as iReal does) so e.g. "Bm7♭5 E7♭9" fits.
+									const size = bar.chords.length > 1 ? "text-[12px] tracking-tight" : "text-[15px]";
 									return (
 										<span
 											key={i}
 											style={{ flexGrow: chord.beats, flexBasis: 0 }}
-											className={`min-w-0 truncate font-display text-[15px] leading-none sm:text-xl ${
+											className={`min-w-0 truncate pt-[0.5em] font-display leading-none sm:text-xl sm:tracking-normal ${size} ${
 												active
 													? "text-accent underline decoration-2 underline-offset-[3px]"
 													: "text-foreground/85"
 											}`}
 										>
-											{chord.symbol}
+											<ChordSymbol symbol={chord.symbol} />
 										</span>
 									);
 								})

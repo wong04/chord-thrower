@@ -20,11 +20,11 @@ export function OptionGrid({
 	const cls = (i: number) => {
 		const picked = picks.includes(i);
 		if (resolved) {
-			if (i === correctIndex) return "border-green-700 bg-green-700 text-on-accent";
-			if (picked) return "border-red-700/50 text-muted line-through";
+			if (i === correctIndex) return "border-good bg-good text-on-accent";
+			if (picked) return "border-bad/50 text-muted line-through";
 			return "border-rule text-muted/60";
 		}
-		if (picked) return "border-red-700/50 text-muted line-through";
+		if (picked) return "border-bad/50 text-muted line-through";
 		return "border-rule text-foreground hover:border-accent/60";
 	};
 

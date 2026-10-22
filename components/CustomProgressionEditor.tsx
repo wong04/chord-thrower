@@ -72,7 +72,7 @@ export function CustomProgressionEditor({
 			{"symbols" in result ? (
 				<p className="font-mono text-xs text-muted">{result.symbols.join("  ")}</p>
 			) : (
-				result.error && <p className="text-xs text-amber-800">⚠ {result.error}</p>
+				result.error && <p className="text-xs text-warn">⚠ {result.error}</p>
 			)}
 
 			<div className="flex justify-end gap-2">

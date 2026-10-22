@@ -32,7 +32,7 @@ export function Keyboard({
 	// key keeps its normal piano colour. Solid only — no alpha stacking.
 	const keyBg = (k: KeyClass, black: boolean) => {
 		if (k !== "none") return "bg-accent";
-		return black ? "bg-foreground" : "bg-[#fdfaf2]";
+		return black ? "bg-[#1d1b18]" : "bg-[#fdfaf2]";
 	};
 	const whiteBg = (k: KeyClass) => keyBg(k, false);
 	const blackBg = (k: KeyClass) => keyBg(k, true);

@@ -30,6 +30,7 @@ import { DrillControls } from "@/components/DrillControls";
 import { PatternControls } from "@/components/PatternControls";
 import { PatternChart } from "@/components/PatternChart";
 import { ChartHeader } from "@/components/ChartHeader";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Standards } from "@/components/Standards";
 import { EarTrainer } from "@/components/EarTrainer";
 import { EarMode } from "@/lib/ear/earItem";
@@ -282,27 +283,9 @@ export default function Home() {
 	const chartNext = chartEngine.chords[(chartEngine.activeIndex + 1) % (chartEngine.chords.length || 1)];
 	const drillShowNext = nextPreview === "show" || (nextPreview === "auto" && level <= 2);
 
-	// Standards: the full chart is the stage (iReal-style), with a compact now/next strip.
+	// Chart modes: the full chart is the stage (iReal-style), with a compact now/next strip.
 	const hero =
-		mode === "standards" ? (
-			<>
-				<ChartHeader
-					symbol={chartActive?.symbol ?? null}
-					nextSymbol={chartNext?.symbol}
-					countdown={countdown}
-					title={standard.title}
-					tonic={standards.tonic}
-					bar={standards.activeBar}
-					barCount={standards.bars.length}
-				/>
-				<PatternChart
-					bars={standards.bars}
-					activeIndex={standards.activeIndex}
-					activeBar={standards.activeBar}
-					sections={standard.sections}
-				/>
-			</>
-		) : mode === "drill" ? (
+		mode === "drill" ? (
 			<ChordDisplay
 				symbol={drill.current?.symbol ?? null}
 				nextSymbol={drill.next?.symbol}
@@ -313,18 +296,23 @@ export default function Home() {
 				showRoman={showRoman && keyChoice !== "all"}
 			/>
 		) : (
-			<div className="flex flex-col items-center gap-3">
-				<ChordDisplay
+			<>
+				<ChartHeader
 					symbol={chartActive?.symbol ?? null}
 					nextSymbol={chartNext?.symbol}
-					showNext
 					countdown={countdown}
-					focused={running}
+					title={mode === "standards" ? standard.title : progression.name}
+					tonic={chartEngine.tonic}
+					bar={chartEngine.activeBar}
+					barCount={chartEngine.bars.length}
 				/>
-				<div className="text-center text-sm text-muted">
-					{progression.name} · key of {chartEngine.tonic} · bar {chartEngine.activeBar + 1}/{chartEngine.bars.length}
-				</div>
-			</div>
+				<PatternChart
+					bars={chartEngine.bars}
+					activeIndex={chartEngine.activeIndex}
+					activeBar={chartEngine.activeBar}
+					sections={mode === "standards" ? standard.sections : undefined}
+				/>
+			</>
 		);
 
 	const practiceSettings =
@@ -389,19 +377,21 @@ export default function Home() {
 			{!running && (
 				<header className="zone mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 pt-5">
 					<h1 className="font-display text-2xl">Chord Thrower</h1>
-					{mode === "ear" ? (
-						<button
-							type="button"
-							onClick={() => setMode(lastPlayMode)}
-							className="text-sm text-muted transition-colors hover:text-foreground"
-						>
-							← Back to playing
-						</button>
-					) : (
-						<>
-							<div className="order-last flex w-full justify-center sm:order-none sm:w-auto">
-								<Segmented value={mode} onChange={selectPlayMode} options={PLAY_MODES} ariaLabel="Practice mode" />
-							</div>
+					{mode !== "ear" && (
+						<div className="order-last flex w-full justify-center sm:order-none sm:w-auto">
+							<Segmented value={mode} onChange={selectPlayMode} options={PLAY_MODES} ariaLabel="Practice mode" />
+						</div>
+					)}
+					<div className="flex items-center gap-2">
+						{mode === "ear" ? (
+							<button
+								type="button"
+								onClick={() => setMode(lastPlayMode)}
+								className="text-sm text-muted transition-colors hover:text-foreground"
+							>
+								← Back to playing
+							</button>
+						) : (
 							<button
 								type="button"
 								onClick={() => setMode("ear")}
@@ -409,18 +399,19 @@ export default function Home() {
 							>
 								Ear training
 							</button>
-						</>
-					)}
+						)}
+						<ThemeToggle />
+					</div>
 				</header>
 			)}
 
 			<main
 				className={`mx-auto flex w-full max-w-3xl flex-1 flex-col items-center px-4 py-8 ${
-					mode === "standards" ? "justify-start gap-6" : "justify-center gap-8"
+					mode === "drill" ? "justify-center gap-8" : "justify-start gap-6"
 				}`}
 			>
 				{shareError && (
-					<p className="text-xs text-amber-800">⚠ Couldn&apos;t import shared progression: {shareError}</p>
+					<p className="text-xs text-warn">⚠ Couldn&apos;t import shared progression: {shareError}</p>
 				)}
 
 				{mode === "ear" ? (
@@ -451,12 +442,8 @@ export default function Home() {
 							</div>
 						)}
 
-						{mode === "patterns" && !running && (
-							<PatternChart bars={pattern.bars} activeIndex={pattern.activeIndex} activeBar={pattern.activeBar} />
-						)}
-
 						{audioLoadError && (
-							<p className="text-xs text-amber-800">
+							<p className="text-xs text-warn">
 								⚠ Some audio samples failed to load — check your connection and refresh.
 							</p>
 						)}

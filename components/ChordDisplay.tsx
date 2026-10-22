@@ -1,5 +1,7 @@
 "use client";
 
+import { ChordSymbol } from "./ChordSymbol";
+
 export function ChordDisplay({
 	symbol,
 	nextSymbol,
@@ -39,7 +41,7 @@ export function ChordDisplay({
 					className="font-display font-medium leading-none tracking-tight break-words"
 					style={{ fontSize: chordSize }}
 				>
-					{symbol ?? "—"}
+					{symbol ? <ChordSymbol symbol={symbol} /> : "—"}
 				</div>
 			)}
 
@@ -47,7 +49,7 @@ export function ChordDisplay({
 				{countdown == null && showNext && nextSymbol ? (
 					<>
 						<span className="text-xs uppercase tracking-[0.2em]">next</span>
-						<span className="font-display text-2xl text-foreground/75">{nextSymbol}</span>
+						<span className="font-display text-2xl text-foreground/75"><ChordSymbol symbol={nextSymbol} /></span>
 					</>
 				) : null}
 			</div>
