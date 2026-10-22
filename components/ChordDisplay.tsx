@@ -43,11 +43,12 @@ export function ChordDisplay({
 				</div>
 			)}
 
-			<div className="h-6 font-sans text-sm uppercase tracking-[0.2em] text-muted">
+			<div className="flex h-8 items-baseline gap-2 text-muted">
 				{countdown == null && showNext && nextSymbol ? (
-					<span>
-						next <span className="ml-1 font-semibold text-foreground/80">{nextSymbol}</span>
-					</span>
+					<>
+						<span className="text-xs uppercase tracking-[0.2em]">next</span>
+						<span className="font-display text-2xl text-foreground/75">{nextSymbol}</span>
+					</>
 				) : null}
 			</div>
 		</div>

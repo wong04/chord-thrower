@@ -304,8 +304,8 @@ export default function Home() {
 					countdown={countdown}
 					focused={running}
 				/>
-				<div className="font-mono text-xs uppercase tracking-[0.25em] text-muted">
-					{mode === "standards" ? `${standard.title} · ` : ""}key of {chartEngine.tonic} · bar{" "}
+				<div className="text-center text-sm text-muted">
+					{mode === "standards" ? standard.title : progression.name} · key of {chartEngine.tonic} · bar{" "}
 					{chartBar + 1}/{chartEngine.bars.length}
 				</div>
 			</div>
