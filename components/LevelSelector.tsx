@@ -20,7 +20,7 @@ export function LevelSelector({
 					onClick={() => onChange(l)}
 					title={getTitle?.(l)}
 					className={`rounded-lg px-2 py-2 text-center text-xs font-medium transition-colors ${
-						value === l ? "bg-accent text-black" : "bg-white/5 text-muted hover:bg-white/10"
+						value === l ? "bg-accent text-on-accent" : "bg-foreground/5 text-muted hover:bg-foreground/10"
 					}`}
 				>
 					{TIERS[l].name}

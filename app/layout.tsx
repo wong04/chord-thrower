@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, DM_Sans, DM_Mono } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const displayFont = Space_Grotesk({
+// Petaluma Script (Steinberg, SIL OFL — see fonts/OFL.txt): Real Book-style hand lettering.
+const displayFont = localFont({
+  src: "./fonts/PetalumaScript.woff2",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  fallback: ["DM Sans", "ui-sans-serif", "sans-serif"],
 });
 
 const sansFont = DM_Sans({
@@ -36,9 +38,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        <footer className="px-4 py-6 text-center text-xs text-foreground/40">
-          Chord Thrower — chord drills, jazz patterns &amp; metronome for improvisers.
-        </footer>
       </body>
     </html>
   );

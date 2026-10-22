@@ -3,6 +3,7 @@
 import React from "react";
 import { Bar } from "@/lib/pattern/usePattern";
 
+/** Lead-sheet style chord chart: barlines, hand-lettered symbols, boxed rehearsal marks. */
 export function PatternChart({
 	bars,
 	activeIndex,
@@ -15,38 +16,42 @@ export function PatternChart({
 	const sectionMap = new Map(sections?.map((s) => [s.bar, s.label]));
 
 	return (
-		<div className="grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
+		<div className="grid w-full max-w-2xl grid-cols-2 gap-y-5 pl-px sm:grid-cols-4">
 			{bars.map((bar, barIdx) => {
 				const sectionLabel = sectionMap.get(barIdx);
 				return (
 					<React.Fragment key={barIdx}>
 						{sectionLabel && (
-							<div className="col-span-2 sm:col-span-4 pt-1 pb-0.5 font-mono text-xs font-semibold uppercase tracking-widest text-accent/70">
-								{sectionLabel}
+							<div className="col-span-2 -mb-3 sm:col-span-4">
+								<span className="inline-block border-[1.5px] border-foreground px-1.5 font-display text-base leading-tight">
+									{sectionLabel}
+								</span>
 							</div>
 						)}
-						<div className="flex min-h-16 items-stretch gap-1 rounded-xl border border-white/10 bg-surface/40 p-1">
+						{/* Both edges + a 1px overlap, so neighbouring barlines merge and each row closes itself. */}
+						<div className="-ml-px flex h-14 items-end gap-2 border-x border-foreground/60 px-2.5 pb-1.5">
 							{bar.continuation ? (
-								<div
-									className={`flex flex-1 items-center justify-center rounded-lg font-mono text-lg transition-colors ${
-										bar.startIndex === activeIndex ? "text-accent/50" : "text-foreground/20"
+								<span
+									className={`font-display text-xl ${
+										bar.startIndex === activeIndex ? "text-accent/70" : "text-foreground/30"
 									}`}
 								>
-									—
-								</div>
+									%
+								</span>
 							) : (
 								bar.chords.map((chord, i) => {
-									const globalIndex = bar.startIndex + i;
-									const active = globalIndex === activeIndex;
+									const active = bar.startIndex + i === activeIndex;
 									return (
-										<div
+										<span
 											key={i}
-											className={`flex flex-1 items-center justify-center rounded-lg px-1 text-center font-mono text-sm font-medium transition-colors ${
-												active ? "bg-accent text-black" : "text-foreground/75"
+											className={`flex-1 truncate font-display text-xl leading-none transition-colors ${
+												active
+													? "text-accent underline decoration-2 underline-offset-[3px]"
+													: "text-foreground/85"
 											}`}
 										>
 											{chord.symbol}
-										</div>
+										</span>
 									);
 								})
 							)}

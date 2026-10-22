@@ -3,8 +3,6 @@
 import { Level, TIERS } from "@/lib/theory/chordPool";
 import { KEY_LEVEL_BLURB, Tonality } from "@/lib/theory/keyHarmony";
 import { LevelSelector } from "./LevelSelector";
-import { INSTRUMENTS, Instrument } from "@/lib/theory/transpose";
-import { TempoRamp } from "./TempoRamp";
 import { KeyTonalitySelector } from "./KeyTonalitySelector";
 import { LevelInfoPopover } from "./LevelInfoPopover";
 
@@ -25,14 +23,8 @@ export function DrillControls({
 	onShowKeyboardChange,
 	barsPerChord,
 	onBarsChange,
-	instrument,
-	onInstrumentChange,
 	nextPreview,
 	onNextPreviewChange,
-	tempoRamp,
-	onTempoRampChange,
-	rampStep,
-	onRampStepChange,
 }: {
 	level: Level;
 	onLevelChange: (level: Level) => void;
@@ -46,19 +38,13 @@ export function DrillControls({
 	onShowKeyboardChange: (show: boolean) => void;
 	barsPerChord: number;
 	onBarsChange: (bars: number) => void;
-	instrument: Instrument;
-	onInstrumentChange: (instrument: Instrument) => void;
 	nextPreview: NextPreview;
 	onNextPreviewChange: (value: NextPreview) => void;
-	tempoRamp: boolean;
-	onTempoRampChange: (enabled: boolean) => void;
-	rampStep: number;
-	onRampStepChange: (step: number) => void;
 }) {
 	const keyMode = keyChoice !== "all";
 
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-5 rounded-2xl border border-white/10 bg-surface/50 p-5">
+		<div className="flex w-full flex-col gap-5">
 			<div className="flex flex-col gap-2">
 				<div className="flex items-center gap-2">
 					<span className="text-sm text-muted">Difficulty</span>
@@ -97,7 +83,7 @@ export function DrillControls({
 				</div>
 
 				<Field label="Bars per chord">
-					<div className="inline-flex rounded-full border border-white/15 p-0.5">
+					<div className="inline-flex rounded-full border border-rule p-0.5">
 						{BARS_OPTIONS.map((b) => (
 							<button
 								key={b}
@@ -105,7 +91,7 @@ export function DrillControls({
 								onClick={() => onBarsChange(b)}
 								className={`flex-1 rounded-full px-3 py-1 text-sm transition-colors ${
 									barsPerChord === b
-										? "bg-accent text-black"
+										? "bg-accent text-on-accent"
 										: "text-muted hover:text-foreground"
 								}`}
 							>
@@ -115,25 +101,11 @@ export function DrillControls({
 					</div>
 				</Field>
 
-				<Field label="Read as">
-					<select
-						value={instrument}
-						onChange={(e) => onInstrumentChange(e.target.value as Instrument)}
-						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
-					>
-						{INSTRUMENTS.map((inst) => (
-							<option key={inst.id} value={inst.id}>
-								{inst.label}
-							</option>
-						))}
-					</select>
-				</Field>
-
 				<Field label="Show Next Chord">
 					<select
 						value={nextPreview}
 						onChange={(e) => onNextPreviewChange(e.target.value as NextPreview)}
-						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 					>
 						<option value="auto">Auto (by difficulty)</option>
 						<option value="show">Always show</option>
@@ -151,14 +123,6 @@ export function DrillControls({
 				/>
 				Show scale &amp; keyboard
 			</label>
-
-			<TempoRamp
-				label="Ramp tempo each chord"
-				tempoRamp={tempoRamp}
-				onTempoRampChange={onTempoRampChange}
-				rampStep={rampStep}
-				onRampStepChange={onRampStepChange}
-			/>
 		</div>
 	);
 }

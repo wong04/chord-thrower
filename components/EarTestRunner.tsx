@@ -77,7 +77,7 @@ export function EarTestRunner({
 				<button
 					type="button"
 					onClick={test.next}
-					className="min-h-[44px] rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+					className="min-h-[44px] rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-on-accent transition hover:brightness-110"
 				>
 					{index + 1 >= test.total ? "See results →" : "Next →"}
 				</button>

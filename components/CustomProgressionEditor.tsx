@@ -34,20 +34,20 @@ export function CustomProgressionEditor({
 	const canSave = "symbols" in result && draft.name.trim() !== "";
 
 	return (
-		<div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-background/60 p-4">
+		<div className="flex flex-col gap-3 rounded-xl border border-rule bg-background/60 p-4">
 			<div className="grid grid-cols-[1fr_auto] gap-3">
 				<input
 					value={draft.name}
 					onChange={(e) => setDraft({ ...draft, name: e.target.value })}
 					placeholder="Name"
 					aria-label="Progression name"
-					className="rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+					className="rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 				/>
 				<select
 					value={draft.key}
 					onChange={(e) => setDraft({ ...draft, key: e.target.value })}
 					aria-label="Key the chords are written in"
-					className="rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+					className="rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 				>
 					{KEYS.map((k) => (
 						<option key={k} value={k}>
@@ -63,7 +63,7 @@ export function CustomProgressionEditor({
 				placeholder={PLACEHOLDER}
 				aria-label="Chord symbols"
 				rows={3}
-				className="rounded-lg border border-white/15 bg-background px-2 py-1.5 font-mono text-sm"
+				className="rounded-lg border border-rule bg-background px-2 py-1.5 font-mono text-sm"
 			/>
 			<p className="text-xs text-muted/70">
 				Separate bars with <code>|</code> · 1, 2 or 4 chords per bar · <code>%</code> holds the previous chord
@@ -72,7 +72,7 @@ export function CustomProgressionEditor({
 			{"symbols" in result ? (
 				<p className="font-mono text-xs text-muted">{result.symbols.join("  ")}</p>
 			) : (
-				result.error && <p className="text-xs text-amber-400/80">⚠ {result.error}</p>
+				result.error && <p className="text-xs text-amber-800">⚠ {result.error}</p>
 			)}
 
 			<div className="flex justify-end gap-2">
@@ -87,7 +87,7 @@ export function CustomProgressionEditor({
 					type="button"
 					onClick={() => onSave({ ...draft, name: draft.name.trim(), text: draft.text.trim() })}
 					disabled={!canSave}
-					className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-black disabled:opacity-40"
+					className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-on-accent disabled:opacity-40"
 				>
 					Save
 				</button>

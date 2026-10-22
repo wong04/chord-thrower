@@ -54,7 +54,7 @@ export function EarTrainer({
 
 	return (
 		<div className="flex w-full max-w-xl flex-col items-center gap-6">
-			<div className="inline-flex rounded-full border border-white/10 bg-surface/50 p-1">
+			<div className="inline-flex rounded-full border border-rule bg-surface/50 p-1">
 				<ViewButton activeView={view === "practice"} onClick={() => setView("practice")}>
 					Practice
 				</ViewButton>
@@ -105,7 +105,7 @@ export function EarTrainer({
 						<button
 							type="button"
 							onClick={ear.next}
-							className="min-h-[44px] rounded-full border border-white/20 px-6 py-2 text-sm font-medium text-foreground hover:border-accent"
+							className="min-h-[44px] rounded-full border border-rule px-6 py-2 text-sm font-medium text-foreground hover:border-accent"
 						>
 							Next →
 						</button>
@@ -150,7 +150,7 @@ function SettingsCard({
 	keyMode: boolean;
 }) {
 	return (
-		<div className="flex w-full flex-col gap-4 rounded-2xl border border-white/10 bg-surface/50 p-5">
+		<div className="flex w-full flex-col gap-4 rounded-2xl border border-rule bg-surface/50 p-5">
 			<LevelSelector value={level} onChange={onLevelChange} />
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -166,7 +166,7 @@ function SettingsCard({
 
 				<label className="flex flex-col gap-1.5">
 					<span className="text-sm text-muted">Identify</span>
-					<div className="inline-flex rounded-full border border-white/15 p-0.5">
+					<div className="inline-flex rounded-full border border-rule p-0.5">
 						<ModeButton active={mode === "quality"} onClick={() => onModeChange("quality")}>
 							Quality
 						</ModeButton>
@@ -204,7 +204,7 @@ function ViewButton({
 			type="button"
 			onClick={onClick}
 			className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-				activeView ? "bg-accent text-black" : "text-muted hover:text-foreground"
+				activeView ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
 			}`}
 		>
 			{children}
@@ -229,7 +229,7 @@ function ModeButton({
 			onClick={onClick}
 			disabled={disabled}
 			className={`flex-1 rounded-full px-3 py-1 text-sm transition-colors disabled:opacity-30 ${
-				active ? "bg-accent text-black" : "text-muted hover:text-foreground"
+				active ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
 			}`}
 		>
 			{children}

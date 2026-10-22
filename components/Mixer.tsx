@@ -45,12 +45,8 @@ export function Mixer(props: MixerProps) {
 	const rideOn = props.subdivision !== "none";
 
 	return (
-		<div className="flex w-full max-w-xl flex-col rounded-2xl border border-white/10 bg-surface/50">
-			<header className="flex items-center justify-between px-5 pt-4">
-				<span className="font-mono text-xs uppercase tracking-[0.25em] text-muted">Mixer</span>
-			</header>
-
-			<div className="flex flex-col divide-y divide-white/5 px-5 py-2">
+		<div className="flex w-full flex-col">
+			<div className="flex flex-col divide-y divide-rule">
 				{/* Metronome */}
 				<ChannelStrip
 					icon="🥁"

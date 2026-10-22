@@ -33,7 +33,7 @@ export function TempoRamp({
 					value={rampStep}
 					onChange={(e) => onRampStepChange(Number(e.target.value))}
 					disabled={!tempoRamp}
-					className="rounded-lg border border-white/15 bg-background px-2 py-1 text-sm disabled:opacity-40"
+					className="rounded-lg border border-rule bg-background px-2 py-1 text-sm disabled:opacity-40"
 				>
 					{RAMP_STEPS.map((s) => (
 						<option key={s} value={s}>

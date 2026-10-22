@@ -31,12 +31,12 @@ export function LevelInfoPopover({ keyMode }: { keyMode: boolean }) {
 				aria-expanded={open}
 				aria-label="What each difficulty level includes"
 				onClick={() => setOpen((o) => !o)}
-				className="grid h-4 w-4 place-items-center rounded-full border border-white/30 text-[10px] leading-none text-muted transition-colors hover:border-accent hover:text-foreground"
+				className="grid h-4 w-4 place-items-center rounded-full border border-rule text-[10px] leading-none text-muted transition-colors hover:border-accent hover:text-foreground"
 			>
 				?
 			</button>
 			{open && (
-				<div className="absolute left-0 top-6 z-20 w-64 rounded-xl border border-white/15 bg-surface p-3 text-xs shadow-xl">
+				<div className="absolute left-0 top-6 z-20 w-64 rounded-xl border border-rule bg-surface p-3 text-xs shadow-xl">
 					<p className="mb-2 font-medium text-foreground">
 						{keyMode ? "Chords drawn from the selected key" : "Random chord qualities"}
 					</p>

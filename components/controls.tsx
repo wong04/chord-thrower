@@ -28,7 +28,7 @@ export function Segmented<T extends string>({
 		<div
 			role="group"
 			aria-label={ariaLabel}
-			className="inline-flex rounded-full border border-white/15 p-0.5"
+			className="inline-flex rounded-full border border-rule p-0.5"
 		>
 			{options.map(([val, label]) => {
 				const selected = value === val;
@@ -36,10 +36,10 @@ export function Segmented<T extends string>({
 				// rather than accent — so an "off" channel never shows a dimmed red chip.
 				const cls = disabled
 					? selected
-						? "bg-white/10 text-foreground/60"
+						? "bg-foreground/10 text-foreground/60"
 						: "text-muted/50"
 					: selected
-						? "bg-accent text-black"
+						? "bg-accent text-on-accent"
 						: "text-muted hover:text-foreground";
 				return (
 					<button
@@ -77,8 +77,8 @@ export function IconToggle({
 			title={title}
 			className={`min-h-[44px] rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
 				on
-					? "border-accent bg-accent text-black"
-					: "border-white/15 text-muted hover:text-foreground"
+					? "border-accent bg-accent text-on-accent"
+					: "border-rule text-muted hover:text-foreground"
 			}`}
 		>
 			{label}
@@ -124,7 +124,7 @@ export function Led({ on }: { on: boolean }) {
 		<span
 			aria-hidden
 			className={`h-2 w-2 shrink-0 rounded-full transition-all ${
-				on ? "bg-accent shadow-[0_0_10px_var(--accent)]" : "bg-white/15"
+				on ? "bg-accent shadow-[0_0_10px_var(--accent)]" : "bg-foreground/15"
 			}`}
 		/>
 	);
