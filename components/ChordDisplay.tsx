@@ -20,8 +20,6 @@ export function ChordDisplay({
 	showRoman?: boolean;
 }) {
 	const chordSize = focused ? "clamp(4.5rem, 26vw, 18rem)" : "clamp(3rem, 15vw, 9rem)";
-	// Push the coral glow a little harder in the focus/fullscreen view.
-	const chordGlow = focused ? "0 0 60px rgba(229, 72, 77, 0.35)" : "0 0 48px rgba(229, 72, 77, 0.28)";
 
 	return (
 		<div className="flex min-h-44 flex-col items-center justify-center gap-4 px-2 text-center">
@@ -39,10 +37,7 @@ export function ChordDisplay({
 			) : (
 				<div
 					className="font-display font-medium leading-none tracking-tight break-words"
-					style={{
-						fontSize: chordSize,
-						textShadow: chordGlow,
-					}}
+					style={{ fontSize: chordSize }}
 				>
 					{symbol ?? "—"}
 				</div>

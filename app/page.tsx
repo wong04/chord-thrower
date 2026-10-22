@@ -305,7 +305,7 @@ export default function Home() {
 			)}
 
 			{!running && (
-				<nav className="zone inline-flex rounded-full border border-white/10 bg-surface/50 p-1">
+				<nav className="zone inline-flex rounded-full border border-rule bg-surface/50 p-1">
 					<TabButton active={mode === "drill"} onClick={() => setMode("drill")}>
 						Drill
 					</TabButton>
@@ -322,7 +322,7 @@ export default function Home() {
 			)}
 
 			{shareError && (
-				<p className="text-xs text-amber-400/80">⚠ Couldn&apos;t import shared progression: {shareError}</p>
+				<p className="text-xs text-amber-800">⚠ Couldn&apos;t import shared progression: {shareError}</p>
 			)}
 
 			{mode === "ear" ? (
@@ -380,7 +380,7 @@ export default function Home() {
 					</div>
 
 					{audioLoadError && (
-						<p className="text-xs text-amber-400/80">
+						<p className="text-xs text-amber-800">
 							⚠ Some audio samples failed to load — check your connection and refresh.
 						</p>
 					)}
@@ -476,7 +476,7 @@ function TabButton({
 			type="button"
 			onClick={onClick}
 			className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-				active ? "bg-accent text-black" : "text-muted hover:text-foreground"
+				active ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
 			}`}
 		>
 			{children}

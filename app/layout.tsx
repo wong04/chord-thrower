@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, DM_Sans, DM_Mono } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const displayFont = Space_Grotesk({
+// Petaluma Script (Steinberg, SIL OFL — see fonts/OFL.txt): Real Book-style hand lettering.
+const displayFont = localFont({
+  src: "./fonts/PetalumaScript.woff2",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  fallback: ["DM Sans", "ui-sans-serif", "sans-serif"],
 });
 
 const sansFont = DM_Sans({

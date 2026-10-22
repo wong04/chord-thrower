@@ -32,7 +32,7 @@ export function EarTestSetup({ onStart }: { onStart: (config: EarTestConfig) => 
 		onStart({ mode, level, keyChoice, tonality, questionCount, attempts, revealOnWrong });
 
 	return (
-		<div className="flex w-full flex-col gap-5 rounded-2xl border border-white/10 bg-surface/50 p-5">
+		<div className="flex w-full flex-col gap-5 rounded-2xl border border-rule bg-surface/50 p-5">
 			<Field label="Exercise">
 				<Pills
 					options={EXERCISES}
@@ -88,7 +88,7 @@ export function EarTestSetup({ onStart }: { onStart: (config: EarTestConfig) => 
 			<button
 				type="button"
 				onClick={start}
-				className="min-h-[44px] self-center rounded-full bg-accent px-8 py-3 text-base font-semibold text-black transition hover:brightness-110"
+				className="min-h-[44px] self-center rounded-full bg-accent px-8 py-3 text-base font-semibold text-on-accent transition hover:brightness-110"
 			>
 				Start test
 			</button>
@@ -115,14 +115,14 @@ function Pills({
 	onChange: (value: string) => void;
 }) {
 	return (
-		<div className="inline-flex flex-wrap rounded-full border border-white/15 p-0.5">
+		<div className="inline-flex flex-wrap rounded-full border border-rule p-0.5">
 			{options.map(([val, label]) => (
 				<button
 					key={val}
 					type="button"
 					onClick={() => onChange(val)}
 					className={`min-h-[36px] rounded-full px-4 py-1.5 text-sm transition-colors ${
-						value === val ? "bg-accent text-black" : "text-muted hover:text-foreground"
+						value === val ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
 					}`}
 				>
 					{label}

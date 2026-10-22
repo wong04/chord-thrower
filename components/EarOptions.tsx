@@ -20,12 +20,12 @@ export function OptionGrid({
 	const cls = (i: number) => {
 		const picked = picks.includes(i);
 		if (resolved) {
-			if (i === correctIndex) return "border-green-500 bg-green-500 text-black";
-			if (picked) return "border-red-500/60 text-muted line-through";
-			return "border-white/10 text-muted/60";
+			if (i === correctIndex) return "border-green-700 bg-green-700 text-on-accent";
+			if (picked) return "border-red-700/50 text-muted line-through";
+			return "border-rule text-muted/60";
 		}
-		if (picked) return "border-red-500/60 text-muted line-through";
-		return "border-white/15 text-foreground hover:border-accent/60";
+		if (picked) return "border-red-700/50 text-muted line-through";
+		return "border-rule text-foreground hover:border-accent/60";
 	};
 
 	return (
@@ -63,7 +63,7 @@ export function AudioControls({
 				<button
 					type="button"
 					onClick={onPlay}
-					className="min-h-[44px] rounded-full bg-accent px-7 py-3 text-base font-semibold text-black transition hover:brightness-110"
+					className="min-h-[44px] rounded-full bg-accent px-7 py-3 text-base font-semibold text-on-accent transition hover:brightness-110"
 				>
 					▶ {revealed ? "Replay" : "Play"}
 				</button>
@@ -71,7 +71,7 @@ export function AudioControls({
 					type="button"
 					onClick={onArpeggiate}
 					title="Hear the notes one at a time"
-					className="min-h-[44px] rounded-full border border-white/15 px-4 py-3 text-sm text-muted transition-colors hover:text-foreground"
+					className="min-h-[44px] rounded-full border border-rule px-4 py-3 text-sm text-muted transition-colors hover:text-foreground"
 				>
 					⇡ Arpeggiate
 				</button>

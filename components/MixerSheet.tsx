@@ -37,14 +37,14 @@ export function MixerSheet({
 				type="button"
 				aria-label="Close mixer"
 				onClick={onClose}
-				className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+				className="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
 			/>
-			<div className="sheet-up relative mx-auto flex max-h-[85vh] w-full max-w-xl flex-col overflow-y-auto rounded-t-3xl border border-white/10 bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl">
+			<div className="sheet-up relative mx-auto flex max-h-[85vh] w-full max-w-xl flex-col overflow-y-auto rounded-t-3xl border border-rule bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl">
 				<button
 					type="button"
 					onClick={onClose}
 					aria-label="Close mixer"
-					className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/15 text-muted transition-colors hover:text-foreground"
+					className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full border border-rule text-muted transition-colors hover:text-foreground"
 				>
 					✕
 				</button>

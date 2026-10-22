@@ -22,13 +22,13 @@ export function Standards({
 		<div className="flex w-full max-w-xl flex-col gap-4">
 			<StandardsBrowser selectedId={selectedId} onSelect={onSelect} />
 
-			<div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-surface/50 p-4">
+			<div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rule bg-surface/50 p-4">
 				<label className="flex items-center gap-2 text-sm text-muted">
 					Key
 					<select
 						value={standardKey}
 						onChange={(e) => onKeyChange(e.target.value)}
-						className="rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+						className="rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 					>
 						{KEYS.map((k) => (
 							<option key={k} value={k}>

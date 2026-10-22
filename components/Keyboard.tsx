@@ -28,18 +28,18 @@ export function Keyboard({
 	const chord = new Set(chordTones.map((n) => Note.chroma(n)).filter((c): c is number => c != null));
 	const scale = new Set(scaleNotes.map((n) => Note.chroma(n)).filter((c): c is number => c != null));
 
-	// Anything in the scale (chord tones included) lights up coral; every other
+	// Anything in the scale (chord tones included) lights up red; every other
 	// key keeps its normal piano colour. Solid only — no alpha stacking.
 	const keyBg = (k: KeyClass, black: boolean) => {
 		if (k !== "none") return "bg-accent";
-		return black ? "bg-neutral-900" : "bg-neutral-200";
+		return black ? "bg-foreground" : "bg-[#fdfaf2]";
 	};
 	const whiteBg = (k: KeyClass) => keyBg(k, false);
 	const blackBg = (k: KeyClass) => keyBg(k, true);
 
 	return (
 		<div
-			className="w-full max-w-xl select-none rounded-xl border border-white/15 bg-neutral-950 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] ring-1 ring-inset ring-white/5"
+			className="w-full max-w-xl select-none rounded-xl border border-rule bg-surface p-1.5 shadow-[0_4px_16px_rgba(60,45,20,0.12)]"
 			aria-hidden
 		>
 			<div className="relative h-24 w-full overflow-hidden rounded-md">

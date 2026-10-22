@@ -20,7 +20,7 @@ export function StandardsBrowser({
 	onSelect: (std: Standard) => void;
 }) {
 	return (
-		<div className="flex w-full flex-col divide-y divide-white/5 overflow-hidden rounded-2xl border border-white/10 bg-surface/50">
+		<div className="flex w-full flex-col divide-y divide-rule overflow-hidden rounded-2xl border border-rule bg-surface/50">
 			{STANDARDS.map((std) => {
 				const active = std.id === selectedId;
 				return (
@@ -29,7 +29,7 @@ export function StandardsBrowser({
 						type="button"
 						onClick={() => onSelect(std)}
 						className={`flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-							active ? "bg-accent/15" : "hover:bg-white/5"
+							active ? "bg-accent/15" : "hover:bg-foreground/5"
 						}`}
 					>
 						<div className="min-w-0 flex-1">

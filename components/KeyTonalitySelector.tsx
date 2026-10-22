@@ -22,7 +22,7 @@ export function KeyTonalitySelector({
 			<select
 				value={keyChoice}
 				onChange={(e) => onKeyChange(e.target.value as string | "all")}
-				className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+				className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 			>
 				<option value="all">{allKeysLabel}</option>
 				{KEYS.map((k) => (
@@ -32,14 +32,14 @@ export function KeyTonalitySelector({
 				))}
 			</select>
 			{keyMode && (
-				<div className="inline-flex rounded-full border border-white/15 p-0.5">
+				<div className="inline-flex rounded-full border border-rule p-0.5">
 					{(["major", "minor"] as Tonality[]).map((t) => (
 						<button
 							key={t}
 							type="button"
 							onClick={() => onTonalityChange(t)}
 							className={`flex-1 rounded-full px-3 py-1 text-xs capitalize transition-colors ${
-								tonality === t ? "bg-accent text-black" : "text-muted hover:text-foreground"
+								tonality === t ? "bg-accent text-on-accent" : "text-muted hover:text-foreground"
 							}`}
 						>
 							{t}

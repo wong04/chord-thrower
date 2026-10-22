@@ -55,12 +55,12 @@ export function PatternControls({
 	};
 
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-white/10 bg-surface/50 p-5">
+		<div className="flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-rule bg-surface/50 p-5">
 			<Field label="Pattern">
 				<select
 					value={progressionId}
 					onChange={(e) => onProgressionChange(e.target.value)}
-					className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+					className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 				>
 					{customProgressions.length > 0 && (
 						<optgroup label="My progressions">
@@ -119,7 +119,7 @@ export function PatternControls({
 					<select
 						value={patternKey}
 						onChange={(e) => onPatternKeyChange(e.target.value)}
-						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 					>
 						{KEYS.map((k) => (
 							<option key={k} value={k}>
@@ -133,7 +133,7 @@ export function PatternControls({
 					<select
 						value={keyCycle}
 						onChange={(e) => onKeyCycleChange(e.target.value as KeyCycle)}
-						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 					>
 						<option value="lock">Stay in one key</option>
 						<option value="cycle4">Cycle 4ths each rep</option>
@@ -145,7 +145,7 @@ export function PatternControls({
 					<select
 						value={instrument}
 						onChange={(e) => onInstrumentChange(e.target.value as Instrument)}
-						className="w-full rounded-lg border border-white/15 bg-background px-2 py-1.5 text-sm"
+						className="w-full rounded-lg border border-rule bg-background px-2 py-1.5 text-sm"
 					>
 						{INSTRUMENTS.map((inst) => (
 							<option key={inst.id} value={inst.id}>
@@ -181,7 +181,7 @@ function SmallButton({ onClick, children }: { onClick: () => void; children: Rea
 		<button
 			type="button"
 			onClick={onClick}
-			className="rounded-full border border-white/15 px-3 py-1 text-sm text-muted transition-colors hover:text-foreground"
+			className="rounded-full border border-rule px-3 py-1 text-sm text-muted transition-colors hover:text-foreground"
 		>
 			{children}
 		</button>

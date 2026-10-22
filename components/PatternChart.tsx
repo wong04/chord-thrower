@@ -25,7 +25,7 @@ export function PatternChart({
 								{sectionLabel}
 							</div>
 						)}
-						<div className="flex min-h-16 items-stretch gap-1 rounded-xl border border-white/10 bg-surface/40 p-1">
+						<div className="flex min-h-16 items-stretch gap-1 rounded-xl border border-rule bg-surface/40 p-1">
 							{bar.continuation ? (
 								<div
 									className={`flex flex-1 items-center justify-center rounded-lg font-mono text-lg transition-colors ${
@@ -42,7 +42,7 @@ export function PatternChart({
 										<div
 											key={i}
 											className={`flex flex-1 items-center justify-center rounded-lg px-1 text-center font-mono text-sm font-medium transition-colors ${
-												active ? "bg-accent text-black" : "text-foreground/75"
+												active ? "bg-accent text-on-accent" : "text-foreground/75"
 											}`}
 										>
 											{chord.symbol}

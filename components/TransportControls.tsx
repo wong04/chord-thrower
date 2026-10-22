@@ -60,10 +60,10 @@ export function TransportControls(props: TransportProps) {
 			disabled={isLoading}
 			className={`min-h-[44px] rounded-full px-7 py-2.5 text-sm font-semibold tracking-wide transition-colors ${
 				running
-					? "bg-surface text-foreground hover:bg-white/10"
+					? "bg-surface text-foreground hover:bg-foreground/10"
 					: isLoading
-						? "bg-accent/40 text-black/50 cursor-not-allowed"
-						: "bg-accent text-black hover:brightness-110"
+						? "bg-accent/40 text-on-accent/60 cursor-not-allowed"
+						: "bg-accent text-on-accent hover:brightness-110"
 			}`}
 		>
 			{running ? "Stop" : "▸ Start"}
@@ -72,7 +72,7 @@ export function TransportControls(props: TransportProps) {
 
 	if (compact) {
 		return (
-			<div className="flex w-full max-w-xl flex-wrap items-center justify-between gap-4 rounded-full border border-white/10 bg-surface/60 px-5 py-3 backdrop-blur">
+			<div className="flex w-full max-w-xl flex-wrap items-center justify-between gap-4 rounded-full border border-rule bg-surface/60 px-5 py-3 backdrop-blur">
 				{startStop}
 				<MetronomeIndicator beatsPerBar={beatsPerBar} beat={beat} counting={counting} />
 				<div className="flex items-baseline gap-1.5">
@@ -86,7 +86,7 @@ export function TransportControls(props: TransportProps) {
 				<button
 					type="button"
 					onClick={props.onOpenMixer}
-					className="min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
+					className="min-h-[44px] rounded-full border border-rule px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
 				>
 					≡ Mixer
 				</button>
@@ -95,7 +95,7 @@ export function TransportControls(props: TransportProps) {
 	}
 
 	return (
-		<div className="flex w-full max-w-xl flex-col gap-6 rounded-3xl border border-white/10 bg-surface/50 p-6">
+		<div className="flex w-full max-w-xl flex-col gap-6 rounded-3xl border border-rule bg-surface/50 p-6">
 			{/* BPM hero */}
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div className="flex items-baseline gap-2">
@@ -111,7 +111,7 @@ export function TransportControls(props: TransportProps) {
 					<button
 						type="button"
 						onClick={onTap}
-						className="min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
+						className="min-h-[44px] rounded-full border border-rule px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
 					>
 						Tap
 					</button>
@@ -137,7 +137,7 @@ export function TransportControls(props: TransportProps) {
 			{/* Meter + count-in */}
 			<div className="flex flex-wrap items-center gap-3">
 				<span className="w-20 shrink-0 text-sm text-muted">Time</span>
-				<div className="inline-flex rounded-full border border-white/15 p-0.5">
+				<div className="inline-flex rounded-full border border-rule p-0.5">
 					{TIME_SIGNATURES.map((ts) => (
 						<button
 							key={ts.label}
@@ -145,7 +145,7 @@ export function TransportControls(props: TransportProps) {
 							onClick={() => props.onBeatsPerBarChange(ts.beatsPerBar)}
 							className={`min-h-[36px] rounded-full px-3 py-1.5 text-sm transition-colors ${
 								beatsPerBar === ts.beatsPerBar
-									? "bg-accent text-black"
+									? "bg-accent text-on-accent"
 									: "text-muted hover:text-foreground"
 							}`}
 						>
