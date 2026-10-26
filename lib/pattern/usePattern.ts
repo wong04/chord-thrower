@@ -24,9 +24,12 @@ export type PatternSettings = {
 	onBeat?: (
 		concertRoot: string,
 		quality: ResolvedChord["quality"],
+		/** The next chord's first bass note: its slash bass if it has one, else its root. */
 		nextConcertRoot: string | undefined,
 		beat: number,
 		time: number,
+		/** The current chord's slash bass, if any. */
+		concertBass?: string,
 	) => void;
 };
 
@@ -153,7 +156,7 @@ export function usePattern(settings: PatternSettings): PatternState {
 		const cur = chords[idx];
 		if (cur) {
 			const nxt = chords[(idx + 1) % chords.length];
-			onBeatRef.current?.(cur.concertRoot, cur.quality, nxt?.concertRoot, tick.beat, tick.time);
+			onBeatRef.current?.(cur.concertRoot, cur.quality, nxt?.concertBass ?? nxt?.concertRoot, tick.beat, tick.time, cur.concertBass);
 		}
 
 		// Defer the highlight move to land on the beat, not at look-ahead.

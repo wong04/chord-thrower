@@ -1,44 +1,9 @@
 import * as Tone from "tone";
-import { Chord, Note } from "tonal";
-import { QUALITIES, QualityId } from "@/lib/theory/qualities";
+import { Note } from "tonal";
+import { QualityId } from "@/lib/theory/qualities";
+import { voiceChord, Voicing } from "./voicing";
 
-export type Voicing = "block" | "shell" | "rootless";
-
-/** Pick which chord tones to sound for a voicing style. */
-function voiceTones(pitchClasses: string[], voicing: Voicing): string[] {
-	if (voicing === "shell" && pitchClasses.length >= 4) {
-		return [pitchClasses[0], pitchClasses[1], pitchClasses[3]]; // root, 3rd, 7th
-	}
-	if (voicing === "rootless" && pitchClasses.length >= 3) {
-		return pitchClasses.slice(1); // drop the root: 3-5-7-(9…)
-	}
-	return pitchClasses;
-}
-
-/**
- * Voice a chord as ascending frequencies starting around octave 3. Tonal returns
- * bare pitch classes, so we stack octaves to keep the voicing rising, then convert
- * to Hz (sidestepping Tone's note parser for spellings like E♯ or B𝄫).
- */
-function voicing(
-	root: string,
-	quality: QualityId,
-	style: Voicing = "block",
-	startOctave = 3,
-): number[] {
-	const pitchClasses = voiceTones(Chord.getChord(QUALITIES[quality].chordType, root).notes, style);
-	const freqs: number[] = [];
-	let octave = startOctave;
-	let prevChroma = -1;
-	for (const pc of pitchClasses) {
-		const chroma = Note.chroma(pc);
-		if (chroma <= prevChroma) octave += 1;
-		prevChroma = chroma;
-		const freq = Note.freq(`${pc}${octave}`);
-		if (freq) freqs.push(freq);
-	}
-	return freqs;
-}
+export type { Voicing } from "./voicing";
 
 // Salamander Grand Piano, sampled every minor third; Tone pitch-shifts between them.
 const SALAMANDER_BASE_URL = "https://tonejs.github.io/audio/salamander/";
@@ -79,9 +44,9 @@ export class ChordPlayer {
 		this.sampler.volume.value = Tone.gainToDb(volume);
 	}
 
-	play(root: string, quality: QualityId, time: number, durationSeconds: number): void {
+	play(root: string, quality: QualityId, time: number, durationSeconds: number, bass?: string): void {
 		if (!this.sampler.loaded) return; // samples not ready yet — skip silently
-		const freqs = voicing(root, quality, this.voicing);
+		const freqs = voiceChord(root, quality, this.voicing, bass);
 		if (!freqs.length) return;
 		// Schedule exactly on the beat `time` (the click uses the same value). Only nudge
 		// forward if `time` is already in the past — compare against the raw audio clock,
@@ -101,7 +66,7 @@ export class ChordPlayer {
 	/** Roll the chord's tones one at a time, `stepSeconds` apart. */
 	arpeggiate(root: string, quality: QualityId, time: number, stepSeconds = 0.22): void {
 		if (!this.sampler.loaded) return;
-		const freqs = voicing(root, quality, this.voicing);
+		const freqs = voiceChord(root, quality, this.voicing);
 		const start = this.at(time);
 		freqs.forEach((freq, i) => {
 			this.sampler.triggerAttackRelease(freq, Math.max(0.2, stepSeconds * 1.4), start + i * stepSeconds, 0.5);

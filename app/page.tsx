@@ -97,11 +97,13 @@ export default function Home() {
 		nextConcertRoot: string | undefined,
 		beat: number,
 		time: number,
+		concertBass?: string,
 	) => {
 		const note = bassNote({
 			mode: bassMode,
 			root: concertRoot,
 			quality,
+			bass: concertBass,
 			beat,
 			beatsPerBar,
 			nextRoot: nextConcertRoot,
@@ -161,7 +163,7 @@ export default function Home() {
 			if (tempoRamp) setBpm((b) => Math.min(MAX_BPM, b + rampStep));
 		},
 		onChordChange: (chord, time) =>
-			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
+			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat, chord.concertBass),
 		onBeat,
 	});
 	const standards = usePattern({
@@ -170,7 +172,7 @@ export default function Home() {
 		keyCycle: "lock",
 		tonic: standardKey,
 		onChordChange: (chord, time) =>
-			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat),
+			playChord(chord.concertRoot, chord.quality, time, chord.beats * secondsPerBeat, chord.concertBass),
 		onBeat,
 	});
 

@@ -66,7 +66,8 @@ export function CustomProgressionEditor({
 				className="rounded-lg border border-rule bg-background px-2 py-1.5 font-mono text-sm"
 			/>
 			<p className="text-xs text-muted/70">
-				Separate bars with <code>|</code> · 1, 2 or 4 chords per bar · <code>%</code> holds the previous chord
+				Separate bars with <code>|</code> · 1, 2 or 4 chords per bar · <code>%</code> holds the previous chord ·{" "}
+				<code>C/E</code> for a bass note
 			</p>
 
 			{"symbols" in result ? (

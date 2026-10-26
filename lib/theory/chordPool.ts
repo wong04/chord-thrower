@@ -28,14 +28,14 @@ export const TIERS: Record<Level, DifficultyTier> = {
 	3: {
 		level: 3,
 		name: "Extensions",
-		description: "9ths, 11ths, 13ths, 6/9, sus",
-		qualities: ["9", "maj9", "m9", "11", "13", "69", "sus4"],
+		description: "9ths, 11ths, 13ths, 6/9, sus, add9, Lydian maj7♯11",
+		qualities: ["9", "maj9", "m9", "11", "13", "69", "sus4", "maj7#11", "maj13", "m11", "7sus4", "add9"],
 	},
 	4: {
 		level: 4,
 		name: "Alterations",
-		description: "Altered dominants (♭9, ♯9, ♯11, ♭13, alt)",
-		qualities: ["7b9", "7#9", "7#11", "7b13", "7alt"],
+		description: "Altered dominants (♭9, ♯9, ♯11, ♭13, ♯5, alt), 13♯11, maj7♯5",
+		qualities: ["7b9", "7#9", "7#11", "7b13", "7alt", "13#11", "7#5", "maj7#5", "7b9b13", "13b9"],
 	},
 };
 

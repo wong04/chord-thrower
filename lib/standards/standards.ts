@@ -1,9 +1,9 @@
 import { Degree, ProgressionChord } from "@/lib/theory/progressionEngine";
 import { QualityId } from "@/lib/theory/qualities";
 
-/** Terse chord constructor: c(degree, quality, beats) — relative to the tune's home key. */
-function c(degree: Degree, quality: QualityId, beats: number): ProgressionChord {
-	return { degree, quality, beats };
+/** Terse chord constructor: c(degree, quality, beats, bass?) — relative to the tune's home key; bass makes it a slash chord. */
+function c(degree: Degree, quality: QualityId, beats: number, bass?: Degree): ProgressionChord {
+	return bass ? { degree, quality, beats, bass } : { degree, quality, beats };
 }
 
 export type Standard = {

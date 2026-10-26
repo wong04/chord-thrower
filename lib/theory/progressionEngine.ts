@@ -41,6 +41,8 @@ export type ProgressionChord = {
 	quality: QualityId;
 	/** Duration in beats. A 4-beat chord fills one 4/4 bar; two 2-beat chords split a bar. */
 	beats: number;
+	/** Slash-chord bass note, as a degree relative to the tonic (so it transposes with the root). */
+	bass?: Degree;
 };
 
 export type Progression = {
@@ -62,6 +64,10 @@ export type ResolvedChord = {
 	quality: QualityId;
 	symbol: string;
 	beats: number;
+	/** Written slash-chord bass, when the chord has one. */
+	bass?: string;
+	/** Concert-pitch slash-chord bass — what the bass line and piano should sound. */
+	concertBass?: string;
 };
 
 /** Resolve a progression template into concrete chords in a concert key. */
@@ -70,15 +76,14 @@ export function expandProgression(
 	tonic: string,
 	instrument: Instrument = "C",
 ): ResolvedChord[] {
+	const spell = (degree: Degree) => simplifyRoot(Note.transpose(tonic, DEGREE_INTERVAL[degree]));
 	return prog.chords.map((chord) => {
-		const concertRoot = simplifyRoot(Note.transpose(tonic, DEGREE_INTERVAL[chord.degree]));
+		const concertRoot = spell(chord.degree);
 		const root = transposeForInstrument(concertRoot, instrument);
-		return {
-			root,
-			concertRoot,
-			quality: chord.quality,
-			symbol: formatChord(root, chord.quality),
-			beats: chord.beats,
-		};
+		const resolved: ResolvedChord = { root, concertRoot, quality: chord.quality, symbol: formatChord(root, chord.quality), beats: chord.beats };
+		if (!chord.bass) return resolved;
+		const concertBass = spell(chord.bass);
+		const bass = transposeForInstrument(concertBass, instrument);
+		return { ...resolved, bass, concertBass, symbol: formatChord(root, chord.quality, bass) };
 	});
 }

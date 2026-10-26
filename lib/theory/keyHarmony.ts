@@ -47,6 +47,9 @@ const MAJOR: LayerSet = {
 		c("IV", "maj9", "IVmaj9"),
 		c("V", "13", "V13"),
 		c("VI", "m9", "vi9"),
+		c("IV", "maj7#11", "IVmaj7♯11"),
+		c("II", "m11", "ii11"),
+		c("V", "7sus4", "V7sus4"),
 	],
 	secondary: [
 		c("VI", "7", "V7/ii"),
@@ -64,6 +67,8 @@ const MAJOR: LayerSet = {
 		c("bIII", "maj7", "♭IIImaj7"),
 		c("V", "7b9", "V7♭9"),
 		c("V", "7alt", "V7alt"),
+		c("bII", "7#11", "♭II7♯11"),
+		c("V", "7b9b13", "V7♭9♭13"),
 	],
 };
 
@@ -93,6 +98,8 @@ const MINOR: LayerSet = {
 		c("IV", "m9", "iv9"),
 		c("V", "7b9", "V7♭9"),
 		c("bVI", "maj9", "♭VImaj9"),
+		c("bVI", "maj7#11", "♭VImaj7♯11"),
+		c("V", "7sus4", "V7sus4"),
 	],
 	secondary: [c("II", "7", "V7/V"), c("I", "7", "V7/iv"), c("bIII", "7", "V7/♭VI")],
 	borrowed: [
@@ -100,6 +107,8 @@ const MINOR: LayerSet = {
 		c("IV", "7", "IV7"),
 		c("V", "7alt", "V7alt"),
 		c("#IV", "m7b5", "♯ivø7"),
+		c("V", "7b9b13", "V7♭9♭13"),
+		c("bII", "7#11", "♭II7♯11"),
 	],
 };
 

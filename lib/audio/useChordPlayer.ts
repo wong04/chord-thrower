@@ -9,6 +9,8 @@ export type PlayChord = (
 	quality: QualityId,
 	time: number,
 	durationSeconds: number,
+	/** Slash-chord bass, voiced under the chord. */
+	bass?: string,
 ) => void;
 
 export type PlayPitch = (note: string, time: number, durationSeconds: number) => void;
@@ -90,8 +92,8 @@ export function useChordPlayer(
 	}, []);
 
 	const play = useCallback<PlayChord>(
-		(root, quality, time, durationSeconds) => {
-			ensurePlayer()?.play(root, quality, time, durationSeconds);
+		(root, quality, time, durationSeconds, bass) => {
+			ensurePlayer()?.play(root, quality, time, durationSeconds, bass);
 		},
 		[ensurePlayer],
 	);

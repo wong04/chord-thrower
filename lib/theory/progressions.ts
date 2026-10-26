@@ -2,9 +2,9 @@ import { Degree, Progression, ProgressionChord } from "./progressionEngine";
 import { QualityId } from "./qualities";
 import type { Level } from "./chordPool";
 
-/** Terse chord constructor: c(degree, quality, beats). */
-function c(degree: Degree, quality: QualityId, beats: number): ProgressionChord {
-	return { degree, quality, beats };
+/** Terse chord constructor: c(degree, quality, beats, bass?) — bass makes it a slash chord. */
+function c(degree: Degree, quality: QualityId, beats: number, bass?: Degree): ProgressionChord {
+	return bass ? { degree, quality, beats, bass } : { degree, quality, beats };
 }
 
 /**

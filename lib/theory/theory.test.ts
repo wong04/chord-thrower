@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Note } from "tonal";
-import { formatChord, QUALITIES } from "./qualities";
+import { formatChord, QUALITIES, QualityId } from "./qualities";
 import { KEYS, transposeForInstrument } from "./transpose";
 import { Level, qualityPool, randomChord, TIERS } from "./chordPool";
 import { tonicChord } from "./keyHarmony";
@@ -19,6 +19,7 @@ import { PROGRESSIONS } from "./progressions";
 import { ChordParseError, parseChordSymbol, parseProgressionText } from "./parseProgression";
 import { customToProgression, decodeShare, encodeShare, ShareLinkError } from "../pattern/customProgressions";
 import { groupIntoBars } from "../pattern/bars";
+import { voiceChord } from "../audio/voicing";
 
 function progById(id: string) {
 	const p = PROGRESSIONS.find((x) => x.id === id);
@@ -458,6 +459,131 @@ describe("chart bars line up with beat position", () => {
 					beat += chord.beats;
 				});
 				expect(bars.length).toBe(Math.ceil(beat / 4));
+			}
+		}
+	});
+});
+
+describe("chord catalog", () => {
+	const ids = Object.keys(QUALITIES) as QualityId[];
+
+	it("every quality has real chord tones and an improvisation scale", () => {
+		for (const id of ids) {
+			expect(chordTones("C", id).length, id).toBeGreaterThanOrEqual(2);
+			expect(scaleForChord("C", id).notes.length, id).toBeGreaterThanOrEqual(5);
+		}
+	});
+
+	it("display symbols are unique and each parses back to its own quality", () => {
+		const symbols = ids.map((id) => QUALITIES[id].symbol);
+		expect(new Set(symbols).size).toBe(symbols.length);
+		for (const id of ids) {
+			expect(parseChordSymbol(`C${id}`).quality, id).toBe(id);
+			expect(parseChordSymbol(`C${QUALITIES[id].symbol}`).quality, QUALITIES[id].symbol).toBe(id);
+		}
+	});
+
+	it("every tier quality is in the catalog, and levels 3–4 include the new colours", () => {
+		for (const level of [1, 2, 3, 4] as Level[]) {
+			for (const q of TIERS[level].qualities) expect(QUALITIES[q], q).toBeDefined();
+		}
+		expect(TIERS[3].qualities).toEqual(expect.arrayContaining(["maj7#11", "m11", "7sus4"]));
+		expect(TIERS[4].qualities).toEqual(expect.arrayContaining(["13#11", "7#5", "maj7#5", "7b9b13"]));
+	});
+});
+
+describe("parser: extended qualities and slash chords", () => {
+	it("reads the common spellings of a Lydian chord", () => {
+		for (const s of ["Cmaj7#11", "CΔ#11", "Cmaj7(#11)", "CM7#11", "Cmaj7♯11"]) {
+			expect(parseChordSymbol(s).quality, s).toBe("maj7#11");
+		}
+	});
+
+	it("reads parenthesised alterations, sus and minor-11 spellings", () => {
+		expect(parseChordSymbol("C7(b9,#11)").quality).toBe("7b9#11");
+		expect(parseChordSymbol("C7sus").quality).toBe("7sus4");
+		expect(parseChordSymbol("Cm11").quality).toBe("m11");
+		expect(parseChordSymbol("C-11").quality).toBe("m11");
+		expect(parseChordSymbol("G7#5").quality).toBe("7#5");
+	});
+
+	it("keeps 6/9 as a quality and splits a trailing bass note off as a slash chord", () => {
+		expect(parseChordSymbol("C6/9")).toEqual({ root: "C", quality: "69" });
+		expect(parseChordSymbol("C/E")).toEqual({ root: "C", quality: "maj", bass: "E" });
+		expect(parseChordSymbol("C6/9/E")).toEqual({ root: "C", quality: "69", bass: "E" });
+		expect(parseChordSymbol("Dm7/G")).toEqual({ root: "D", quality: "m7", bass: "G" });
+		expect(parseChordSymbol("D/F♯")).toEqual({ root: "D", quality: "maj", bass: "F#" });
+	});
+
+	it("rejects a bad bass note or unknown quality", () => {
+		expect(() => parseChordSymbol("C/H")).toThrow(ChordParseError);
+		expect(() => parseChordSymbol("C/")).toThrow(ChordParseError);
+		expect(() => parseChordSymbol("Cmaj7#13")).toThrow(/unknown chord quality/);
+		expect(() => parseProgressionText("C | F/X", "C")).toThrow(/bar 2/);
+	});
+
+	it("stores the slash bass as a degree relative to the key", () => {
+		expect(parseProgressionText("C/E G7/B", "C")).toEqual([
+			{ degree: "I", quality: "maj", beats: 2, bass: "III" },
+			{ degree: "V", quality: "7", beats: 2, bass: "VII" },
+		]);
+	});
+});
+
+describe("slash chords through the engine", () => {
+	it("F/A written in C transposes correctly to all 12 keys", () => {
+		const prog = customToProgression({ id: "custom:s", name: "s", key: "C", text: "F/A" });
+		for (const key of KEYS) {
+			const [chord] = expandProgression(prog, key);
+			const root = Note.transpose(key, "4P");
+			const bass = Note.transpose(key, "6M");
+			expect(Note.chroma(chord.concertRoot)).toBe(Note.chroma(root));
+			expect(Note.chroma(chord.concertBass!)).toBe(Note.chroma(bass));
+			expect(chord.symbol).toMatch(/\//);
+		}
+	});
+
+	it("formats the bass after the chord and transposes it for the instrument", () => {
+		expect(formatChord("C", "maj7", "E")).toBe("Cmaj7/E");
+		// A plain major triad over a bass is written bare, as on real charts.
+		expect(formatChord("G", "maj", "F")).toBe("G/F");
+		const prog = customToProgression({ id: "custom:s", name: "s", key: "C", text: "C/E" });
+		const [chord] = expandProgression(prog, "C", "Bb");
+		expect(chord.symbol).toBe("D/F♯");
+		expect(chord.concertBass).toBe("E");
+	});
+
+	it("bass plays the slash note on beat 1 and walks toward the next chord's bass", () => {
+		const CoverE = { root: "C", quality: "maj" as const, bass: "E", beatsPerBar: 4 };
+		expect(bassNote({ mode: "roots", beat: 0, ...CoverE })).toBe("E");
+		expect(bassNote({ mode: "walking", beat: 0, ...CoverE })).toBe("E");
+		expect(bassNote({ mode: "walking", beat: 3, nextRoot: "F", ...CoverE })).toBe("E");
+	});
+
+	it("voices a slash bass as the lowest note, below every chord tone", () => {
+		const freqs = voiceChord("C", "maj7", "block", "E");
+		const bass = freqs[0];
+		expect(bass).toBeCloseTo(Note.freq("E2")!, 3);
+		for (const f of freqs.slice(1)) expect(f).toBeGreaterThan(bass);
+		expect(voiceChord("C", "maj7", "block")).toHaveLength(4);
+	});
+});
+
+describe("key-mode colour chords", () => {
+	const draws = (level: Level, key: string, tonality: "major" | "minor", n = 1500) =>
+		new Set(Array.from({ length: n }, () => randomChord(level, key, tonality).symbol));
+
+	it("Lydian IVmaj7♯11 and V7sus4 show up in C major from level 3", () => {
+		const l3 = draws(3, "C", "major");
+		expect(l3.has("Fmaj7♯11")).toBe(true);
+		expect(l3.has("G7sus4")).toBe(true);
+		expect(draws(2, "C", "major").has("Fmaj7♯11")).toBe(false);
+	});
+
+	it("new key-mode chords resolve with real roots in every key", () => {
+		for (const key of KEYS) {
+			for (const tonality of ["major", "minor"] as const) {
+				for (const s of draws(4, key, tonality, 200)) expect(s).toMatch(/^[A-G]/);
 			}
 		}
 	});

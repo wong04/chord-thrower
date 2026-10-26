@@ -1,4 +1,4 @@
-import { Note } from "tonal";
+import { ChordType, Note } from "tonal";
 import { Degree, ProgressionChord } from "./progressionEngine";
 import { QUALITIES, QualityId } from "./qualities";
 
@@ -15,51 +15,53 @@ export class ChordParseError extends Error {
 
 const normalizeAccidentals = (s: string) => s.replace(/♭/g, "b").replace(/♯/g, "#");
 
-const QUALITY_ALIASES: Record<string, QualityId> = {
-	"": "maj",
-	M: "maj",
-	maj: "maj",
-	"-": "min",
-	min: "min",
-	o: "dim",
-	aug: "aug",
-	M7: "maj7",
-	Maj7: "maj7",
-	"Δ": "maj7",
-	"Δ7": "maj7",
-	"-7": "m7",
-	min7: "m7",
-	"ø": "m7b5",
-	"ø7": "m7b5",
-	"-7b5": "m7b5",
-	o7: "dim7",
-	"-6": "m6",
-	"m(maj7)": "mMaj7",
-	"-Δ7": "mMaj7",
-	"-maj7": "mMaj7",
-	"-9": "m9",
-	"Δ9": "maj9",
-	"6/9": "69",
-	sus: "sus4",
-	alt: "7alt",
-};
+/** Spelling-insensitive form of a quality suffix: "7(♭9, ♯11)" -> "7b9#11". */
+const normalizeSuffix = (s: string) => normalizeAccidentals(s).replace(/[(),\s]/g, "");
 
-// Every quality's id and display symbol is also accepted verbatim.
-const QUALITY_LOOKUP: Record<string, QualityId> = Object.values(QUALITIES).reduce(
-	(acc, q) => ({ ...acc, [q.id]: q.id, [normalizeAccidentals(q.symbol)]: q.id }),
-	{ ...QUALITY_ALIASES },
-);
+/**
+ * Every accepted spelling -> its quality: each quality's id, display symbol and own aliases,
+ * plus Tonal's aliases for its chord type (Δ#11, M7#11, ^7, -7, ø, 7+…). A spelling claimed by
+ * two qualities is a catalog bug, so it fails loudly at load rather than parsing ambiguously.
+ */
+const QUALITY_LOOKUP: Map<string, QualityId> = (() => {
+	const lookup = new Map<string, QualityId>();
+	for (const quality of Object.values(QUALITIES)) {
+		const spellings = [quality.id, quality.symbol, ...(quality.aliases ?? []), ...ChordType.get(quality.chordType).aliases];
+		for (const spelling of spellings) {
+			const key = normalizeSuffix(spelling);
+			const claimed = lookup.get(key);
+			if (claimed && claimed !== quality.id) {
+				throw new Error(`chord spelling "${spelling}" is claimed by both "${claimed}" and "${quality.id}"`);
+			}
+			lookup.set(key, quality.id);
+		}
+	}
+	return lookup;
+})();
+
+const lookupQuality = (suffix: string) => QUALITY_LOOKUP.get(normalizeSuffix(suffix));
 
 const SEMITONE_DEGREES: Degree[] = ["I", "bII", "II", "bIII", "III", "IV", "bV", "V", "bVI", "VI", "bVII", "VII"];
 
-/** Parse one chord symbol such as "Dm7", "B♭7♭9" or "Fø". */
-export function parseChordSymbol(token: string): { root: string; quality: QualityId } {
+export type ParsedChord = { root: string; quality: QualityId; bass?: string };
+
+/** Parse one chord symbol such as "Dm7", "B♭7♭9", "Cmaj7(♯11)" or a slash chord like "C/E". */
+export function parseChordSymbol(token: string): ParsedChord {
 	const match = /^([A-G][b#]?)(.*)$/.exec(normalizeAccidentals(token));
 	if (!match) throw new ChordParseError(`"${token}" has no valid root (A–G)`);
 	const [, root, suffix] = match;
-	const quality = QUALITY_LOOKUP[suffix];
-	if (!quality) throw new ChordParseError(`"${token}": unknown chord quality "${suffix}"`);
-	return { root, quality };
+
+	// Whole suffix first, so "6/9" stays a quality rather than a slash chord.
+	const quality = lookupQuality(suffix);
+	if (quality) return { root, quality };
+
+	const slash = /^(.*)\/([^/]*)$/.exec(suffix);
+	if (!slash) throw new ChordParseError(`"${token}": unknown chord quality "${suffix}"`);
+	const [, upper, bass] = slash;
+	if (!/^[A-G][b#]?$/.test(bass)) throw new ChordParseError(`"${token}": bass note "${bass}" isn't a note (A–G)`);
+	const upperQuality = lookupQuality(upper);
+	if (!upperQuality) throw new ChordParseError(`"${token}": unknown chord quality "${upper}"`);
+	return { root, quality: upperQuality, bass };
 }
 
 function degreeFor(root: string, key: string): Degree {
@@ -91,8 +93,10 @@ export function parseProgressionText(text: string, key: string): ProgressionChor
 		const beats = BEATS_PER_BAR / tokens.length;
 		for (const token of tokens) {
 			try {
-				const { root, quality } = parseChordSymbol(token);
-				chords.push({ degree: degreeFor(root, key), quality, beats });
+				const { root, quality, bass } = parseChordSymbol(token);
+				const chord: ProgressionChord = { degree: degreeFor(root, key), quality, beats };
+				if (bass) chord.bass = degreeFor(bass, key);
+				chords.push(chord);
 			} catch (e) {
 				if (e instanceof ChordParseError) throw new ChordParseError(`bar ${barNo}: ${e.message}`);
 				throw e;
